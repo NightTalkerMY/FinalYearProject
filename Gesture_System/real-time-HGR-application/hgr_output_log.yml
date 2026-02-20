@@ -1,0 +1,878 @@
+--- e2eET HGR Log @ 2026-01-26 15:03:59.612406 ----------------------------
+-------------------------
+>HGR: @20260126.150418.893179: len(gs_deque)=59->>-00 | gs.shape=(59, 21, 3)
+>HGR: @20260126.150418.893179 gesture sequence visualized and saved.
+>HGR: 20260126.150418 -> [swipeR]
+-------------------------
+>HGR: @20260126.150425.699723: len(gs_deque)=56->>-00 | gs.shape=(56, 21, 3)
+>HGR: @20260126.150425.699723 gesture sequence visualized and saved.
+>HGR: 20260126.150425 -> [swipeL]
+-------------------------
+>HGR: @20260126.150432.596859: len(gs_deque)=53->>-00 | gs.shape=(53, 21, 3)
+>HGR: @20260126.150432.596859 gesture sequence visualized and saved.
+>HGR: 20260126.150432 -> [swipeR]
+-------------------------
+>HGR: @20260126.150449.190157: len(gs_deque)=56->>-00 | gs.shape=(56, 21, 3)
+>HGR: @20260126.150449.190157 gesture sequence visualized and saved.
+>HGR: 20260126.150449 -> [SwipeD]
+-------------------------
+>HGR: @20260126.150456.016046: len(gs_deque)=47->>-00 | gs.shape=(47, 21, 3)
+>HGR: @20260126.150456.016046 gesture sequence visualized and saved.
+>HGR: 20260126.150456 -> [SwipeU]
+-------------------------
+>HGR: @20260126.150511.808497: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: @20260126.150511.808497 gesture sequence visualized and saved.
+>HGR: 20260126.150511 -> [Expand]
+-------------------------
+>HGR: @20260126.150517.960958: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.150517.960958 gesture sequence visualized and saved.
+>HGR: 20260126.150517 -> [Grab]
+-------------------------
+>HGR: @20260126.150521.887476: len(gs_deque)=17->>-00 | gs.shape=(17, 21, 3)
+>HGR: @20260126.150521.887476 gesture sequence visualized and saved.
+>HGR: 20260126.150521 -> [Expand]
+-------------------------
+>HGR: @20260126.150525.884044: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.150525.884044 gesture sequence visualized and saved.
+>HGR: 20260126.150525 -> [Grab]
+-------------------------
+>HGR: @20260126.150533.371072: len(gs_deque)=17->>-00 | gs.shape=(17, 21, 3)
+>HGR: @20260126.150533.371072 gesture sequence visualized and saved.
+>HGR: 20260126.150533 -> [Expand]
+-------------------------
+>HGR: @20260126.150537.160021: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.150537.160021 gesture sequence visualized and saved.
+>HGR: 20260126.150537 -> [Grab]
+-------------------------
+>HGR: @20260126.151219.931595: len(gs_deque)=53->>-00 | gs.shape=(53, 21, 3)
+>HGR: @20260126.151219.931595 sequence visualized.
+>HGR: 20260126.151219 -> [swipeR]
+-------------------------
+>HGR: @20260126.151224.723313: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: @20260126.151224.723313 sequence visualized.
+>HGR: 20260126.151224 -> [Expand]
+-------------------------
+>HGR: @20260126.151229.662796: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.151229.662796 sequence visualized.
+>HGR: 20260126.151229 -> [Grab]
+-------------------------
+>HGR: @20260126.151235.720373: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: @20260126.151235.720373 sequence visualized.
+>HGR: 20260126.151235 -> [Expand]
+-------------------------
+>HGR: @20260126.151239.988736: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.151239.988736 sequence visualized.
+>HGR: 20260126.151239 -> [Grab]
+-------------------------
+>HGR: @20260126.151929.377821: len(gs_deque)=37->>-00 | gs.shape=(37, 21, 3)
+>HGR: @20260126.151929.377821 sequence visualized.
+>HGR: 20260126.151929 -> [Grab]
+-------------------------
+>HGR: @20260126.151941.692333: len(gs_deque)=40->>-00 | gs.shape=(40, 21, 3)
+>HGR: @20260126.151941.692333 sequence visualized.
+>HGR: 20260126.151941 -> [SwipeU]
+-------------------------
+>HGR: @20260126.152504.720647: len(gs_deque)=53->>-00 | gs.shape=(53, 21, 3)
+>HGR: @20260126.152504.720647 sequence visualized.
+>HGR: 20260126.152504 -> [swipeR]
+-------------------------
+>HGR: @20260126.152620.838605: len(gs_deque)=58->>-00 | gs.shape=(58, 21, 3)
+>HGR: @20260126.152620.838605 sequence visualized.
+>HGR: 20260126.152620 -> [swipeR]
+-------------------------
+>HGR: @20260126.152632.155075: len(gs_deque)=55->>-00 | gs.shape=(55, 21, 3)
+>HGR: @20260126.152632.155075 sequence visualized.
+>HGR: 20260126.152632 -> [swipeR]
+-------------------------
+>HGR: @20260126.152637.071947: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.152637.071947 sequence visualized.
+>HGR: 20260126.152637 -> [SwipeD]
+-------------------------
+>HGR: @20260126.152641.396116: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: @20260126.152641.396116 sequence visualized.
+>HGR: 20260126.152641 -> [SwipeD]
+-------------------------
+>HGR: @20260126.152645.055089: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.152645.055089 sequence visualized.
+>HGR: 20260126.152645 -> [Grab]
+-------------------------
+>HGR: @20260126.152651.171498: len(gs_deque)=54->>-00 | gs.shape=(54, 21, 3)
+>HGR: @20260126.152651.171498 sequence visualized.
+>HGR: 20260126.152651 -> [swipeR]
+-------------------------
+>HGR: @20260126.152656.586868: len(gs_deque)=52->>-00 | gs.shape=(52, 21, 3)
+>HGR: @20260126.152656.586868 sequence visualized.
+>HGR: 20260126.152656 -> [SwipeU]
+-------------------------
+>HGR: @20260126.152713.720677: len(gs_deque)=52->>-00 | gs.shape=(52, 21, 3)
+>HGR: @20260126.152713.720677 sequence visualized.
+>HGR: 20260126.152713 -> [SwipeU]
+-------------------------
+>HGR: @20260126.152722.601679: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.152722.601679 sequence visualized.
+>HGR: 20260126.152722 -> [Expand]
+-------------------------
+>HGR: @20260126.152730.206320: len(gs_deque)=56->>-00 | gs.shape=(56, 21, 3)
+>HGR: @20260126.152730.206320 sequence visualized.
+>HGR: 20260126.152730 -> [swipeR]
+-------------------------
+>HGR: @20260126.152736.687225: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: @20260126.152736.687225 sequence visualized.
+>HGR: 20260126.152736 -> [Expand]
+-------------------------
+>HGR: @20260126.152927.120647: len(gs_deque)=48->>-00 | gs.shape=(48, 21, 3)
+>HGR: @20260126.152927.120647 sequence visualized.
+>HGR: 20260126.152927 -> [swipeR]
+-------------------------
+>HGR: @20260126.152939.505658: len(gs_deque)=53->>-00 | gs.shape=(53, 21, 3)
+>HGR: @20260126.152939.505658 sequence visualized.
+>HGR: 20260126.152939 -> [swipeR]
+-------------------------
+>HGR: @20260126.152945.255823: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: @20260126.152945.255823 sequence visualized.
+>HGR: 20260126.152945 -> [Grab]
+-------------------------
+>HGR: @20260126.152948.939159: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: @20260126.152948.939159 sequence visualized.
+>HGR: 20260126.152948 -> [Expand]
+-------------------------
+>HGR: @20260126.152952.535853: len(gs_deque)=17->>-00 | gs.shape=(17, 21, 3)
+>HGR: @20260126.152952.535853 sequence visualized.
+>HGR: 20260126.152952 -> [Expand]
+-------------------------
+>HGR: @20260126.153122.090829: len(gs_deque)=53->>-00 | gs.shape=(53, 21, 3)
+>HGR: @20260126.153122.090829 sequence visualized.
+>HGR: 20260126.153122 -> [swipeR]
+-------------------------
+>HGR: @20260126.153131.089046: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: @20260126.153131.089046 sequence visualized.
+>HGR: 20260126.153131 -> [Expand]
+-------------------------
+>HGR: @20260126.154726.481793: len(gs_deque)=53->>-00 | gs.shape=(53, 21, 3)
+-------------------------
+>HGR: @20260126.154738.240954: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+-------------------------
+>HGR: @20260126.155013.046630: len(gs_deque)=72->>-00 | gs.shape=(72, 21, 3)
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+-------------------------
+>HGR: @20260126.155801.692575: len(gs_deque)=60->>-00 | gs.shape=(60, 21, 3)
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+-------------------------
+>HGR: @20260126.155810.972365: len(gs_deque)=17->>->HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+00 | gs.shape=(17, 21, 3)
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+-------------------------
+>HGR: @20260126.155814.441728: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155814.441728 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155814.441728 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155814.441728 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155814.441728 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155814.441728 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155814.441728 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+-------------------------
+>HGR: @20260126.155818.039165: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: @20260126.155814.441728 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155814.441728 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155818.039165 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155814.441728 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155818.039165 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155814.441728 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155818.039165 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155814.441728 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155818.039165 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155814.441728 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155818.039165 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155814.441728 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155818.039165 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155814.441728 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155818.039165 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155013.046630 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155801.692575 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155810.972365 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155814.441728 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.155818.039165 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154726.481793 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: @20260126.154738.240954 Fused [CM+TD+FA] sent via ZMQ.
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+-------------------------
+>HGR: @20260126.161000.898351: len(gs_deque)=61->>-00 | gs.shape=(61, 21, 3)
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+-------------------------
+>HGR: @20260126.161213.795578: len(gs_deque)=52->>-00 | gs.shape=(52, 21, 3)
+-------------------------
+>HGR: @20260126.161227.358622: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+-------------------------
+>HGR: @20260126.161231.160861: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+-------------------------
+>HGR: @20260126.161409.529685: len(gs_deque)=53->>-00 | gs.shape=(53, 21, 3)
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+>HGR: ZMQ -> [swipeR]
+-------------------------
+>HGR: @20260126.161635.044569: len(gs_deque)=41->>-00 | gs.shape=(41, 21, 3)
+>HGR: ZMQ -> [swipeR]
+-------------------------
+>HGR: @20260126.161638.872164: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: ZMQ -> [swipeR]
+-------------------------
+>HGR: @20260126.161643.833323: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: ZMQ -> [swipeR]
+-------------------------
+>HGR: @20260126.161647.534388: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: ZMQ -> [swipeR]
+-------------------------
+>HGR: @20260126.161651.514928: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: ZMQ -> [swipeR]
+-------------------------
+>HGR: @20260126.161655.038449: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: ZMQ -> [swipeR]
+-------------------------
+>HGR: @20260126.161703.593532: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: ZMQ -> [swipeR]
+-------------------------
+>HGR: @20260126.161711.233566: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: ZMQ -> [swipeR]
+-------------------------
+>HGR: @20260126.161715.824283: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: ZMQ -> [swipeR]
+-------------------------
+>HGR: @20260126.161721.242326: len(gs_deque)=57->>-00 | gs.shape=(57, 21, 3)
+>HGR: ZMQ -> [swipeR]
+-------------------------
+>HGR: @20260126.161726.307090: len(gs_deque)=62->>-00 | gs.shape=(62, 21, 3)
+>HGR: ZMQ -> [swipeR]
+-------------------------
+>HGR: @20260126.162150.737668: len(gs_deque)=51->>-00 | gs.shape=(51, 21, 3)
+>HGR: @20260126.162150.737668 gesture sequence visualized and saved.
+>HGR: 20260126.162150 -> [swipeR]
+-------------------------
+>HGR: @20260126.162200.133075: len(gs_deque)=17->>-00 | gs.shape=(17, 21, 3)
+>HGR: @20260126.162200.133075 gesture sequence visualized and saved.
+>HGR: 20260126.162200 -> [Expand]
+-------------------------
+>HGR: @20260126.162336.311335: len(gs_deque)=57->>-00 | gs.shape=(57, 21, 3)
+>HGR: @20260126.162336.311335 sequence visualized.
+>HGR: 20260126.162336 -> [swipeR]
+-------------------------
+>HGR: @20260126.162341.368190: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: @20260126.162341.368190 sequence visualized.
+>HGR: 20260126.162341 -> [SwipeD]
+-------------------------
+>HGR: @20260126.162348.261717: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.162348.261717 sequence visualized.
+>HGR: 20260126.162348 -> [Grab]
+-------------------------
+>HGR: @20260126.162352.902492: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.162352.902492 sequence visualized.
+>HGR: 20260126.162352 -> [Expand]
+-------------------------
+>HGR: @20260126.162403.401409: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.162403.401409 sequence visualized.
+>HGR: 20260126.162403 -> [Grab]
+-------------------------
+>HGR: @20260126.162412.728205: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.162412.728205 sequence visualized.
+>HGR: 20260126.162412 -> [Expand]
+-------------------------
+>HGR: @20260126.162416.527411: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.162416.527411 sequence visualized.
+>HGR: 20260126.162416 -> [Grab]
+-------------------------
+>HGR: @20260126.162419.997312: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.162419.997312 sequence visualized.
+>HGR: 20260126.162419 -> [Expand]
+-------------------------
+>HGR: @20260126.162425.793348: len(gs_deque)=63->>-00 | gs.shape=(63, 21, 3)
+>HGR: @20260126.162425.793348 sequence visualized.
+>HGR: 20260126.162425 -> [swipeR]
+-------------------------
+>HGR: @20260126.162432.373088: len(gs_deque)=97->>-00 | gs.shape=(97, 21, 3)
+>HGR: @20260126.162432.373088 sequence visualized.
+>HGR: 20260126.162432 -> [swipeL]
+-------------------------
+>HGR: @20260126.162438.135066: len(gs_deque)=60->>-00 | gs.shape=(60, 21, 3)
+>HGR: @20260126.162438.135066 sequence visualized.
+>HGR: 20260126.162438 -> [SwipeD]
+-------------------------
+>HGR: @20260126.162444.310246: len(gs_deque)=47->>-00 | gs.shape=(47, 21, 3)
+>HGR: @20260126.162444.310246 sequence visualized.
+>HGR: 20260126.162444 -> [SwipeU]
+-------------------------
+>HGR: @20260126.162456.024557: len(gs_deque)=66->>-00 | gs.shape=(66, 21, 3)
+>HGR: @20260126.162456.024557 sequence visualized.
+>HGR: 20260126.162456 -> [SwipeD]
+-------------------------
+>HGR: @20260126.162501.299639: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: @20260126.162501.299639 sequence visualized.
+>HGR: 20260126.162501 -> [Expand]
+-------------------------
+>HGR: @20260126.162505.161805: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.162505.161805 sequence visualized.
+>HGR: 20260126.162505 -> [Grab]
+-------------------------
+>HGR: @20260126.181526.064450: len(gs_deque)=62->>-00 | gs.shape=(62, 21, 3)
+-------------------------
+>HGR: @20260126.181553.167628: len(gs_deque)=95->>-00 | gs.shape=(95, 21, 3)
+-------------------------
+>HGR: @20260126.181600.633258: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.181526.064450 sequence visualized.
+>HGR: @20260126.181553.167628 sequence visualized.
+>HGR: @20260126.181600.633258 sequence visualized.
+-------------------------
+>HGR: @20260126.183645.808750: len(gs_deque)=50->>-00 | gs.shape=(50, 21, 3)
+>HGR: @20260126.183645.808750 sequence visualized.
+>HGR: 20260126.183645 -> [swipeL]
+-------------------------
+>HGR: @20260126.183708.202632: len(gs_deque)=49->>-00 | gs.shape=(49, 21, 3)
+>HGR: @20260126.183708.202632 sequence visualized.
+>HGR: 20260126.183708 -> [swipeR]
+-------------------------
+>HGR: @20260126.183713.974358: len(gs_deque)=46->>-00 | gs.shape=(46, 21, 3)
+>HGR: @20260126.183713.974358 sequence visualized.
+>HGR: 20260126.183713 -> [swipeR]
+-------------------------
+>HGR: @20260126.183717.661439: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: @20260126.183717.661439 sequence visualized.
+>HGR: 20260126.183717 -> [Grab]
+-------------------------
+>HGR: @20260126.183724.095435: len(gs_deque)=51->>-00 | gs.shape=(51, 21, 3)
+>HGR: @20260126.183724.095435 sequence visualized.
+>HGR: 20260126.183724 -> [SwipeU]
+-------------------------
+>HGR: @20260126.183729.525240: len(gs_deque)=58->>-00 | gs.shape=(58, 21, 3)
+>HGR: @20260126.183729.525240 sequence visualized.
+>HGR: 20260126.183729 -> [SwipeD]
+-------------------------
+>HGR: @20260126.183734.837100: len(gs_deque)=48->>-00 | gs.shape=(48, 21, 3)
+>HGR: @20260126.183734.837100 sequence visualized.
+>HGR: 20260126.183734 -> [swipeR]
+-------------------------
+>HGR: @20260126.183739.939284: len(gs_deque)=56->>-00 | gs.shape=(56, 21, 3)
+>HGR: @20260126.183739.939284 sequence visualized.
+>HGR: 20260126.183739 -> [swipeL]
+-------------------------
+>HGR: @20260126.183743.973226: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: @20260126.183743.973226 sequence visualized.
+>HGR: 20260126.183743 -> [Expand]
+-------------------------
+>HGR: @20260126.183749.802963: len(gs_deque)=49->>-00 | gs.shape=(49, 21, 3)
+>HGR: @20260126.183749.802963 sequence visualized.
+>HGR: 20260126.183749 -> [swipeR]
+-------------------------
+>HGR: @20260126.183754.564853: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.183754.564853 sequence visualized.
+>HGR: 20260126.183754 -> [Expand]
+-------------------------
+>HGR: @20260126.184616.097646: len(gs_deque)=52->>-00 | gs.shape=(52, 21, 3)
+>HGR: @20260126.184616.097646 sequence visualized.
+>HGR: 20260126.184616 -> [swipeR]
+-------------------------
+>HGR: @20260126.184651.138171: len(gs_deque)=52->>-00 | gs.shape=(52, 21, 3)
+>HGR: @20260126.184651.138171 sequence visualized.
+>HGR: 20260126.184651 -> [swipeR]
+-------------------------
+>HGR: @20260126.184657.573073: len(gs_deque)=57->>-00 | gs.shape=(57, 21, 3)
+>HGR: @20260126.184657.573073 sequence visualized.
+>HGR: 20260126.184657 -> [swipeR]
+-------------------------
+>HGR: @20260126.184704.106431: len(gs_deque)=50->>-00 | gs.shape=(50, 21, 3)
+>HGR: @20260126.184704.106431 sequence visualized.
+>HGR: 20260126.184704 -> [swipeR]
+-------------------------
+>HGR: @20260126.184708.038490: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.184708.038490 sequence visualized.
+>HGR: 20260126.184708 -> [Grab]
+-------------------------
+>HGR: @20260126.184713.437382: len(gs_deque)=51->>-00 | gs.shape=(51, 21, 3)
+>HGR: @20260126.184713.437382 sequence visualized.
+>HGR: 20260126.184713 -> [SwipeU]
+-------------------------
+>HGR: @20260126.184718.738807: len(gs_deque)=65->>-00 | gs.shape=(65, 21, 3)
+>HGR: @20260126.184718.738807 sequence visualized.
+>HGR: 20260126.184718 -> [SwipeD]
+-------------------------
+>HGR: @20260126.184723.869869: len(gs_deque)=48->>-00 | gs.shape=(48, 21, 3)
+>HGR: @20260126.184723.869869 sequence visualized.
+>HGR: 20260126.184723 -> [swipeL]
+-------------------------
+>HGR: @20260126.184728.706048: len(gs_deque)=57->>-00 | gs.shape=(57, 21, 3)
+>HGR: @20260126.184728.706048 sequence visualized.
+>HGR: 20260126.184728 -> [swipeR]
+-------------------------
+>HGR: @20260126.184734.206645: len(gs_deque)=59->>-00 | gs.shape=(59, 21, 3)
+>HGR: @20260126.184734.206645 sequence visualized.
+>HGR: 20260126.184734 -> [SwipeU]
+-------------------------
+>HGR: @20260126.184738.073772: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.184738.073772 sequence visualized.
+>HGR: 20260126.184738 -> [Expand]
+-------------------------
+>HGR: @20260126.184745.070144: len(gs_deque)=70->>-00 | gs.shape=(70, 21, 3)
+>HGR: @20260126.184745.070144 sequence visualized.
+>HGR: 20260126.184745 -> [swipeL]
+-------------------------
+>HGR: @20260126.184750.105750: len(gs_deque)=49->>-00 | gs.shape=(49, 21, 3)
+>HGR: @20260126.184750.105750 sequence visualized.
+>HGR: 20260126.184750 -> [swipeL]
+-------------------------
+>HGR: @20260126.184753.603131: len(gs_deque)=15->>-00 | gs.shape=(15, 21, 3)
+>HGR: @20260126.184753.603131 sequence visualized.
+>HGR: 20260126.184753 -> [Grab]
+-------------------------
+>HGR: @20260126.184757.505783: len(gs_deque)=17->>-00 | gs.shape=(17, 21, 3)
+>HGR: @20260126.184757.505783 sequence visualized.
+>HGR: 20260126.184757 -> [Expand]
+-------------------------
+>HGR: @20260126.184801.170191: len(gs_deque)=16->>-00 | gs.shape=(16, 21, 3)
+>HGR: @20260126.184801.170191 sequence visualized.
+>HGR: 20260126.184801 -> [Expand]
