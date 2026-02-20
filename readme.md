@@ -14,6 +14,21 @@ This repository contains the core orchestration and microservices for an interac
 
 *Video demonstration of the Intelligent Holographic AI system in action to be uploaded soon!*
 
+## 🌟 Key Innovations & Contributions
+
+While the foundational architecture builds upon existing research, this project introduces several novel optimizations to meet the strict latency and accuracy requirements of a real-time retail environment:
+
+### RAG & LLM Pipeline Enhancements
+* **Length-Aware Reranking:** Optimized the cross-encoder reranker by implementing length-aware document arrangement prior to processing. This significantly reduces padding waste and lowers inference latency, all while maintaining strict Mean Reciprocal Rank (MRR) and Hit Rate metrics (benchmarked against MS MARCO and custom retail datasets).
+* **Instruction-Tuned Semantic Routing:** Replaced traditional precomputed query matching with direct document-embedding comparisons. By introducing a task-specific instruction function, $\Phi$, incoming queries are encoded with an instruction prefix ($I_{task}$) and compared directly against raw document embeddings. Evaluated against retail datasets, this dynamic routing approach demonstrated measurable improvements in macro recall, F1 score, and overall precision.
+
+### Dynamic Gesture Control Enhancements
+* **Real-Time Boxgate Logic:** Upgraded the baseline gesture recording phase from a manual, keyboard-triggered stop mechanism to a fully automated, real-time continuous inference loop utilizing custom boxgate logic.
+* **Performance Optimization:** This shift from manual to automated triggering drastically reduces termination overhead and significantly increases gesture segmentation purity, ensuring a seamless user experience with the holographic avatar.
+
+> 📊 **Detailed Evaluation & Metrics**
+> For a comprehensive breakdown of the empirical data supporting these improvements—including MS MARCO benchmarks, retail dataset F1/precision scores, and latency tests—please refer to the `experiment_metric.md` file *(coming soon)*.
+
 ## 🏗️ System Architecture & Microservices
 
 The project is divided into specialized directories. Each acts as an independent microservice with its own virtual environment and dependencies, all communicating with the central `main_orchestrator.py`.
@@ -64,6 +79,7 @@ pip install -r requirements.txt
 deactivate
 cd ..
 
+
 ```
 
 ### Step 2: Setup the React Avatar
@@ -74,6 +90,7 @@ Navigate to the frontend directory and install the Node packages:
 cd react_avatar
 npm install
 cd ..
+
 
 ```
 
@@ -86,7 +103,9 @@ python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
 
+
 ```
+
 ## 🚀 Running the System
 
 The entire microservice architecture is fully automated through the central orchestrator. You do not need to manually start each individual component.
@@ -96,13 +115,14 @@ To launch the complete Intelligent Holographic AI system:
 1. Open your terminal in the root directory.
 2. Ensure your root virtual environment is activated.
 3. Run the orchestrator:
+
 ```bash
 python main_orchestrator.py
+
 
 ```
 
 *(Note: `dummy_gesture_control.py` and `dummy_no_mic.py` are provided at the root level for testing isolated orchestrator components without full hardware requirements).*
-
 
 ## 📚 Acknowledgements & References
 
