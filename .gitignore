@@ -8,6 +8,7 @@ node_modules/
 # Ignore other bin dependencies
 ffmpeg/
 rhubarb/
+mediamtx.exe
 
 # Ignore others
 .vscode/
