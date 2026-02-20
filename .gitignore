@@ -1,0 +1,27 @@
+# Ignore the python virtual environment 
+venv/
+*/venv/
+
+# Ignore the node package from react
+node_modules/
+
+# Ignore other bin dependencies
+ffmpeg/
+rhubarb/
+
+# Ignore others
+.vscode/
+__pycache__/
+
+## Ignore the rest ##
+# 1. chatbot 
+models/
+data/
+
+# 2. Gesture System 
+checkpoints/
+splitted_datasets/
+.sources/
+
+# 3. react 
+public/
