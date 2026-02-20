@@ -16,15 +16,15 @@ This repository contains the core orchestration and microservices for an interac
 
 ## 🌟 Key Innovations & Contributions
 
-While the foundational architecture builds upon existing research, this project introduces several novel optimizations to meet the strict latency and accuracy requirements of a real-time retail environment:
+While the foundational architecture builds upon established research, this project introduces system-level optimizations to satisfy the latency, accuracy, and responsiveness constraints of a real-time retail deployment:
 
 ### RAG & LLM Pipeline Enhancements
-* **Length-Aware Reranking:** Optimized the cross-encoder reranker by implementing length-aware document arrangement prior to processing. This significantly reduces padding waste and lowers inference latency, all while maintaining strict Mean Reciprocal Rank (MRR) and Hit Rate metrics (benchmarked against MS MARCO and custom retail datasets).
-* **Instruction-Tuned Semantic Routing:** Replaced traditional precomputed query matching with direct document-embedding comparisons. By introducing a task-specific instruction function, $\Phi$, incoming queries are encoded with an instruction prefix ($I_{task}$) and compared directly against raw document embeddings. Evaluated against retail datasets, this dynamic routing approach demonstrated measurable improvements in macro recall, F1 score, and overall precision.
+* **Length-Aware Reranking:** The cross-encoder reranking stage was optimized by introducing length-aware document arrangement prior to inference. This design minimizes padding inefficiencies, reducing overall inference latency while preserving retrieval quality. Performance was benchmarked against MS MARCO and custom retail datasets, maintaining strong Mean Reciprocal Rank (MRR) and Hit Rate metrics.
+* **Instruction-Tuned Semantic Routing:** Traditional precomputed query matching was replaced with a dynamic, instruction-tuned semantic routing mechanism. Incoming queries are encoded using a task-specific instruction function Φ with an instruction prefix (I_task) and compared directly against raw document embeddings. Evaluation on retail datasets showed measurable improvements in macro recall, F1 score, and precision, enabling more adaptive and context-aware retrieval.
 
 ### Dynamic Gesture Control Enhancements
-* **Real-Time Boxgate Logic:** Upgraded the baseline gesture recording phase from a manual, keyboard-triggered stop mechanism to a fully automated, real-time continuous inference loop utilizing custom boxgate logic.
-* **Performance Optimization:** This shift from manual to automated triggering drastically reduces termination overhead and significantly increases gesture segmentation purity, ensuring a seamless user experience with the holographic avatar.
+* **Real-Time Boxgate Logic:** The baseline gesture capture pipeline was re-architected from a manual, keyboard-triggered termination model to a fully automated, continuous inference loop using custom boxgate logic. This enables real-time segmentation without user intervention.
+* **Performance Optimization:** By eliminating manual termination overhead, the system achieves higher gesture segmentation purity and lower latency variance, resulting in smoother interaction and improved perceptual continuity for the holographic avatar.
 
 > 📊 **Detailed Evaluation & Metrics**
 > For a comprehensive breakdown of the empirical data supporting these improvements—including MS MARCO benchmarks, retail dataset F1/precision scores, and latency tests—please refer to the `experiment_metric.md` file *(coming soon)*.
