@@ -87,17 +87,26 @@ venv\Scripts\activate
 pip install -r requirements.txt
 
 ```
-
 ## 🚀 Running the System
 
-1. Start the individual microservices by running the `main.py` script inside each respective directory (ensure you activate their specific virtual environments first).
-2. Start MediaMTX streaming using the executable in the `mediamtx/` folder.
-3. Start the frontend avatar by running `npm start` inside `react_avatar/`.
-4. With all microservices active, run the main orchestrator from the root directory:
+The entire microservice architecture is fully automated through the central orchestrator. You do not need to manually start each individual component.
 
+To launch the complete Intelligent Holographic AI system:
+
+1. Open your terminal in the root directory.
+2. Ensure your root virtual environment is activated.
+3. Run the orchestrator:
 ```bash
 python main_orchestrator.py
 
 ```
 
 *(Note: `dummy_gesture_control.py` and `dummy_no_mic.py` are provided at the root level for testing isolated orchestrator components without full hardware requirements).*
+
+
+## 📚 Acknowledgements & References
+
+This project builds upon and significantly modifies concepts from the following academic research:
+
+* **RAG & LLM Architecture:** The foundational retrieval-augmented generation structure was inspired by *TeleOracle: Fine-Tuned Retrieval-Augmented Generation With Long-Context Support for Networks* (Alabbasi et al., IEEE Internet of Things Journal, 2025). In this repository, the architecture has been uniquely adapted and improved to support real-time retail microservices using Microsoft Phi-2 and ChromaDB.
+* **Dynamic Gesture System:** The core vision methodology is based on *Skeleton-Based Real-Time Hand Gesture Recognition Using Data Fusion and Ensemble Multi-Stream CNN Architecture* (Habib, Yusuf, & Moustafa, MDPI Technologies, 2025). The system has been modified and fine-tuned for specialized, real-time interactive avatar control using ResNet.
