@@ -101,5 +101,3 @@ python main_orchestrator.py
 ```
 
 *(Note: `dummy_gesture_control.py` and `dummy_no_mic.py` are provided at the root level for testing isolated orchestrator components without full hardware requirements).*
-
-```
