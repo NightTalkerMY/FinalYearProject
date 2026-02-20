@@ -1,0 +1,16 @@
+tts==0.22.0
+transformers==4.41.2
+torchcodec==0.9.1
+
+# First stage
+# pip install --no-cache-dir "tts==0.22.0"
+
+# Second stage
+# pip install --no-cache-dir "transformers==4.41.2"
+
+# Third stage 
+# pip install --no-cache-dir torchcodec
+
+# Forth stage
+# pip uninstall -y torch torchvision torchaudio
+# pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
