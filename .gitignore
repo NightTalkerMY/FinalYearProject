@@ -26,3 +26,7 @@ splitted_datasets/
 
 # 3. react 
 public/
+
+# 4. experiment_metric
+metric_tests/
+ms_macro/
