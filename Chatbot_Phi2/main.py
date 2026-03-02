@@ -71,7 +71,8 @@ from peft import PeftModel
 import uvicorn
 
 BASE_MODEL_ID = "microsoft/phi-2"
-TUNED_MODEL_PATH = "models/phi2_retail_native_bf16_c6e0c0"
+# TUNED_MODEL_PATH = "models/phi2_retail_native_bf16_c6e0c0"
+TUNED_MODEL_PATH = "models/phi2_retail_native_bf16_38f4a5"
 
 # -----------------------------
 # Stopper: stop at <END_OF_RESPONSE>
@@ -113,17 +114,34 @@ STOP_STR = "<END_OF_RESPONSE>"  # your finetuned end tag
 STOP_IDS = tokenizer.encode(STOP_STR, add_special_tokens=False)
 STOPPING = StoppingCriteriaList([StopOnTokens(STOP_IDS)])
 
+# SYSTEM_PROMPT = (
+#     "You are the PUMA Holographic Assistant. Follow these strict operational rules:\n"
+#     "1. If Context is 'N/A': Handle general greetings or PUMA-related brand questions. "
+#     "If the query is completely unrelated to PUMA, sports, or retail, politely refuse to answer.\n"
+#     "2. If Context is 'No products found.': Inform the user that no matching footwear was found "
+#     "and suggest they try a different style or category.\n"
+#     "3. If Context contains Product Lists: Provide a high-level highlight of the collection "
+#     "and transition the user into the immersive 3D view.\n"
+#     "4. If Context contains T&C/Policies: Use the information provided to answer the user query accurately.\n"
+#     "5. If User Query is '<GESTURE_EXIT>': Acknowledge that the user has closed the 3D display, "
+#     "briefly summarize the product they just viewed, and ask if they need further assistance.\n\n"
+# )
+
+### Version 2
 SYSTEM_PROMPT = (
-    "You are the PUMA Holographic Assistant. Follow these strict operational rules:\n"
-    "1. If Context is 'N/A': Handle general greetings or PUMA-related brand questions. "
-    "If the query is completely unrelated to PUMA, sports, or retail, politely refuse to answer.\n"
-    "2. If Context is 'No products found.': Inform the user that no matching footwear was found "
+    "You are the PUMA Holographic Assistant, an intelligent 3D AI retail guide. "
+    "Follow these strict operational rules:\n"
+    "1. If Context is 'N/A' and the user greets you, says goodbye, or asks who you are: "
+    "Respond enthusiastically in character as the PUMA Holographic AI Assistant and pivot to exploring PUMA gear.\n"
+    "2. If Context is 'N/A' and the query is completely unrelated to PUMA, sports, or retail: "
+    "Politely refuse to answer, stay in character, and pivot back to PUMA footwear or gear.\n"
+    "3. If Context is 'No products found.': Inform the user that no matching footwear was found "
     "and suggest they try a different style or category.\n"
-    "3. If Context contains Product Lists: Provide a high-level highlight of the collection "
+    "4. If Context contains Product Lists: Provide a high-level highlight of the collection "
     "and transition the user into the immersive 3D view.\n"
-    "4. If Context contains T&C/Policies: Use the information provided to answer the user query accurately.\n"
-    "5. If User Query is '<GESTURE_EXIT>': Acknowledge that the user has closed the 3D display, "
-    "briefly summarize the product they just viewed, and ask if they need further assistance.\n\n"
+    "5. If Context contains T&C/Policies: Use the information provided to answer the user query accurately.\n"
+    "6. If User Query is '<GESTURE_EXIT>': Acknowledge that the user has closed the 3D display, "
+    "briefly summarize the product they just viewed, and ask if they need further assistance."
 )
 
 app = FastAPI()
