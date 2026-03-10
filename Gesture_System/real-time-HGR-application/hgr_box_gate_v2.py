@@ -5,13 +5,13 @@ class BoxGate:
         # CONFIGURATION
         self.MIN_FRAMES = 8
         self.BOX_RADIUS = 0.08      # Stricter Swipe (8cm)
-        self.SCALE_THRESH = 0.01    # Stricter Grab
+        self.SCALE_THRESH = 0.01   # Stricter Grab
         self.stop_frame = 0
         
         # STATE
         self.is_recording = False
-        self.anchor_pos = None      # anchor for wrist 
-        self.anchor_scale = None    # anchor for hand openness (scale)
+        self.anchor_pos = None      
+        self.anchor_scale = None    
         self.frame_count = 0
         self.stop_counter = 0
         
@@ -25,7 +25,7 @@ class BoxGate:
         curr_pos = lmCoords[0] # Wrist
         
         # Calculate Scale
-        tips = lmCoords[[4,8,12,16,20]] # Tips of all fingers
+        tips = lmCoords[[4,8,12,16,20]]
         curr_scale = np.mean(np.linalg.norm(tips - curr_pos, axis=1))
         
         state = "IDLE"
@@ -38,7 +38,7 @@ class BoxGate:
             self.anchor_scale = curr_scale ## current scaling we have 
             return "WARMUP", 0.0
 
-        #  LOGIC B: IDLE STAGE (keep checking whether we should start recording)
+        #  LOGIC B: IDLE STAGE 
         if not self.is_recording:
             # Init Anchor if missing (should be set by warmup, but safety check)
             if self.anchor_pos is None:
@@ -47,7 +47,7 @@ class BoxGate:
             
             # Check Diffs 
             dist_moved = np.linalg.norm(curr_pos - self.anchor_pos) ## for swipe case
-            scale_change = abs(curr_scale - self.anchor_scale)      ## for grab case
+            scale_change = abs(curr_scale - self.anchor_scale) ## for grab case
             
             ## Trigger based on current distance or scale change based on thier previous anchor
             # 1. TRIGGER: Swipe
@@ -75,7 +75,7 @@ class BoxGate:
 
             debug_val = dist_moved
 
-        #  LOGIC C: RECORDING STAGE (keep checking whether we should stop recording, but also count frames)
+        #  LOGIC C: RECORDING STAGE
         else:
             self.frame_count += 1
             state = "RECORDING"
@@ -88,7 +88,11 @@ class BoxGate:
             if hasattr(self, 'prev_scale'):
                 step_scale = abs(curr_scale - self.prev_scale)
             
-
+            # Strict Stop (Must be very still)
+            # if step_move < 0.01: 
+            #     self.stop_counter += 1
+            # else:
+            #     self.stop_counter = 0 
             is_wrist_still = step_move < 0.01
             is_hand_still  = step_scale < 0.001
 
@@ -97,7 +101,7 @@ class BoxGate:
             else:
                 self.stop_counter = 0 # Reset if EITHER is moving
             
-            # we need total consecutive 0 frame (so is instant) to confirm that our stop condition has reached
+            # we need total consecutive 8 frame to confirm that our stop condition has reached
             if self.stop_counter > self.stop_frame:
                 self.is_recording = False
 

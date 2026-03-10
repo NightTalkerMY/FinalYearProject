@@ -24,7 +24,9 @@ from aiortc import RTCPeerConnection, RTCSessionDescription
 # --- IMPORT YOUR MODULES ---
 from _mediapipePoseEstimation import HandDetector
 from _helperFunctions import hgrLogger
-from hgr_box_gate import BoxGate 
+# from hgr_box_gate import BoxGate 
+from hgr_box_gate_v2 import BoxGate 
+
 
 # [CONFIGURATION]____________________________________________________
 SERVER_URL = "http://127.0.0.1:8889/cam1/whep" 

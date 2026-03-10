@@ -24,7 +24,7 @@ CONFIG = {
         "max_left_steps": None,
     },
     "metric2": {
-        "action_move_thresh": 0.001,
+        "action_move_thresh": 0.01,
         "save_plot": True,
         "plot_path": "./reports/metric2_purity_boxplot.png",
     },
