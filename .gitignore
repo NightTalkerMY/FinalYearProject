@@ -34,3 +34,6 @@ ms_macro/
 
 # 5. TTS outputs
 outputs_xtts/
+
+# 6. experiment ignores
+experiment_metric/boxgate_metric/*.pkl
