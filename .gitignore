@@ -31,9 +31,8 @@ public/
 # 4. experiment_metric
 metric_tests/
 ms_macro/
+experiment_metric/boxgate_metric/reports
+experiment_metric/boxgate_metric/*.pkl
 
 # 5. TTS outputs
 outputs_xtts/
-
-# 6. experiment ignores
-experiment_metric/boxgate_metric/*.pkl
