@@ -181,6 +181,15 @@ async def chat(request: Request):
     # Keep your regex as extra safety
     response_text = re.sub(r"<END_OF_RESPONSE.*", "", response_text, flags=re.DOTALL).strip()
 
+    # --- MEMORY CLEANUP ---
+    # Delete the large tensors used in this specific generation cycle
+    del inputs
+    del outputs
+    
+    # Free the unoccupied cached memory back to the GPU
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
     return {"response": response_text}
 
 if __name__ == "__main__":
