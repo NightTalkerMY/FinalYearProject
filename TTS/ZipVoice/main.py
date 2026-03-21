@@ -10,7 +10,7 @@ from engine import ZipVoiceEngine, SHORT_WAV, PROMPT_TEXT
 app = FastAPI(title="PUMA Holographic Assistant - ZipVoice TTS Service")
 
 # --- CONFIGURATION ---
-RHUBARB_PATH = str(Path("../rhubarb/rhubarb.exe").resolve())
+RHUBARB_PATH = str(Path("../../rhubarb/rhubarb.exe").resolve())
 OUTPUT_DIR = Path("outputs_zipvoice")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True) 
 
