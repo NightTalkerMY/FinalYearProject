@@ -1,6 +1,7 @@
 # Ignore the python virtual environment 
 venv/
 */venv/
+newenv/
 
 # Ignore the node package from react
 node_modules/
@@ -28,6 +29,9 @@ splitted_datasets/
 
 # 3. react 
 public/
+puppeteer-cache/
+puppeteer-data/
+
 
 # 4. experiment_metric
 metric_tests/
