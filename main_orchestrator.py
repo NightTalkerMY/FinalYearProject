@@ -18,7 +18,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.resolve()
 
 # 2. Define expected paths
-MEDIAMTX_DIR = Path(r"C:\Users\wwon0076\Desktop\FYP\mediamtx")
+MEDIAMTX_DIR = Path(r"D:\FinalYearProject\mediamtx")
 WATCHDOG_PYTHON = MEDIAMTX_DIR / "venv" / "Scripts" / "python.exe"
 WATCHDOG_SCRIPT = "mediamtx_watchdog.py"
 
@@ -50,12 +50,13 @@ AI_SERVICES = {
     "STT": {"dir": "STT", "url": "http://127.0.0.1:8000/transcribe"},
     "LLM": {"dir": "Chatbot_Phi2", "url": "http://127.0.0.1:8001/chat"},
     "RAG": {"dir": "RAG", "url": "http://127.0.0.1:8002/get_context"},
-    "TTS": {"dir": "TTS", "url": "http://127.0.0.1:8003/generate_speech"},
-    "GESTURE": {
-        "dir": "Gesture_System/real-time-HGR-application", 
-        "venv": "..\\venv", 
-        "url": "http://127.0.0.1:8889"
-    } 
+    # "TTS": {"dir": "TTS", "url": "http://127.0.0.1:8003/generate_speech"},
+    "TTS": {"dir": "TTS/ZipVoice", "url": "http://127.0.0.1:8003/generate_speech"},
+    # "GESTURE": {
+    #     "dir": "Gesture_System/real-time-HGR-application", 
+    #     "venv": "..\\venv", 
+    #     "url": "http://127.0.0.1:8889"
+    # } 
 }
 
 # ==========================================
@@ -71,7 +72,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-TTS_OUTPUT_DIR = Path("./TTS/outputs_xtts").resolve()
+# TTS_OUTPUT_DIR = Path("./TTS/outputs_xtts").resolve()
+TTS_OUTPUT_DIR = Path("./TTS/ZipVoice/outputs_zipvoice").resolve()
 TTS_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/audio", StaticFiles(directory=TTS_OUTPUT_DIR), name="audio")
 
@@ -83,6 +85,7 @@ SYSTEM_STATE = {
     "trigger_carousel": False,
     "gesture": "talk",
     "asins": [],
+    "current_focus_asin": None,  # NEW: Tracks what React is looking at
     "last_update_id": 0,
     "streams": {"avatar": False, "cam1": False},
     "ai_launched": False
@@ -171,9 +174,9 @@ def launch_ai_services():
     if not SYSTEM_STATE["streams"]["avatar"]:
         print("Waiting for Avatar Stream...")
         return
-    if not SYSTEM_STATE["streams"]["cam1"]:
-        print("Waiting for Pi Camera Stream...")
-        return
+    # if not SYSTEM_STATE["streams"]["cam1"]:
+    #     print("Waiting for Pi Camera Stream...")
+    #     return
 
     print("\n[ORCHESTRATOR] All Streams Stable (Avatar + Cam1). Launching AI Services...")
     for name, cfg in AI_SERVICES.items():
@@ -265,13 +268,32 @@ async def process_voice_command(request: Request):
     # 2. RAG
     print(f"Sending to RAG...")
     try:
-        rag_res = requests.post(AI_SERVICES["RAG"]["url"], json={"query": user_text}).json()
+        rag_payload = {"query": user_text}
+        
+        # --- NEW: CHECK FOCUS STATE ---
+        if SYSTEM_STATE.get("trigger_carousel") and SYSTEM_STATE.get("current_focus_asin"):
+            print(f"Carousel is active. Following up on ASIN: {SYSTEM_STATE['current_focus_asin']}")
+            rag_payload["current_asin"] = SYSTEM_STATE["current_focus_asin"]
+            rag_payload["is_followup"] = True
+
+        rag_res = requests.post(AI_SERVICES["RAG"]["url"], json=rag_payload).json()
         context = rag_res.get("context", "N/A")
-        trigger_carousel = rag_res.get("trigger_carousel", False)
-        asins = rag_res.get("asins", [])
-        print(f"Context found. Carousel: {trigger_carousel}")
+        
+        # Keep existing state if RAG doesn't override it with new products
+        new_trigger_carousel = rag_res.get("trigger_carousel", SYSTEM_STATE.get("trigger_carousel", False))
+        
+        # --- FIXED EXIT LOGIC ---
+        # If RAG explicitly sends 'asins' (even an empty list to exit), use it.
+        if "asins" in rag_res:
+            final_asins = rag_res["asins"]
+        else:
+            final_asins = SYSTEM_STATE.get("asins", [])
+        
+        print(f"Context found. Carousel active: {new_trigger_carousel}")
     except:
-        context, trigger_carousel, asins = "N/A", False, []
+        context = "N/A"
+        new_trigger_carousel = SYSTEM_STATE.get("trigger_carousel", False)
+        final_asins = SYSTEM_STATE.get("asins", [])
     
     # 3. LLM
     print(f"Sending to LLM...")
@@ -292,7 +314,7 @@ async def process_voice_command(request: Request):
             
             # --- FIXED GESTURE LOGIC ---
             gesture = "talk"
-            if trigger_carousel:
+            if new_trigger_carousel:
                 gesture = "transition"
             elif "N/A" in str(context) or "No products found" in str(context):
                 gesture = "confused"
@@ -301,8 +323,8 @@ async def process_voice_command(request: Request):
                 "status": "SPEAKING",
                 "audio_url": f"{base}/{filename}",
                 "viseme_url": f"{base}/{filename.replace('.wav', '.json')}",
-                "trigger_carousel": trigger_carousel,
-                "asins": asins,
+                "trigger_carousel": new_trigger_carousel,
+                "asins": final_asins,
                 "gesture": gesture,
                 "last_update_id": SYSTEM_STATE["last_update_id"] + 1
             })
@@ -313,26 +335,44 @@ async def process_voice_command(request: Request):
     print("--- [PIPELINE COMPLETE] ---\n")
     return {"status": "ok", "text": response_text}
 
+
 @app.post("/process_text")
 async def process_text_command(request: Request):
     global SYSTEM_STATE
     data = await request.json()
     user_text = data.get("text", "")
     print(f"\nUser Typed: {user_text}")
+    
     if not user_text: return {"status": "empty"}
 
-    # --- RESTORED FULL PIPELINE FOR TEXT ---
-    
     # 1. RAG (Text)
     print(f"Sending to RAG...")
     try:
-        rag_res = requests.post(AI_SERVICES["RAG"]["url"], json={"query": user_text}).json()
+        rag_payload = {"query": user_text}
+        
+        # --- NEW: CHECK FOCUS STATE ---
+        if SYSTEM_STATE.get("trigger_carousel") and SYSTEM_STATE.get("current_focus_asin"):
+            print(f"Carousel is active. Following up on ASIN: {SYSTEM_STATE['current_focus_asin']}")
+            rag_payload["current_asin"] = SYSTEM_STATE["current_focus_asin"]
+            rag_payload["is_followup"] = True
+
+        rag_res = requests.post(AI_SERVICES["RAG"]["url"], json=rag_payload).json()
         context = rag_res.get("context", "N/A")
-        trigger_carousel = rag_res.get("trigger_carousel", False)
-        asins = rag_res.get("asins", [])
-        print(f"Context found. Carousel: {trigger_carousel}")
+        
+        # Keep existing state if RAG doesn't override it with new products
+        new_trigger_carousel = rag_res.get("trigger_carousel", SYSTEM_STATE.get("trigger_carousel", False))
+        
+        # --- FIXED EXIT LOGIC ---
+        if "asins" in rag_res:
+            final_asins = rag_res["asins"]
+        else:
+            final_asins = SYSTEM_STATE.get("asins", [])
+        
+        print(f"Context found. Carousel active: {new_trigger_carousel}")
     except:
-        context, trigger_carousel, asins = "N/A", False, []
+        context = "N/A"
+        new_trigger_carousel = SYSTEM_STATE.get("trigger_carousel", False)
+        final_asins = SYSTEM_STATE.get("asins", [])
 
     # 2. LLM (Text)
     print(f"Sending to LLM...")
@@ -351,7 +391,7 @@ async def process_text_command(request: Request):
         
         # --- FIXED GESTURE LOGIC (Text Mode) ---
         gesture = "talk"
-        if trigger_carousel:
+        if new_trigger_carousel:
             gesture = "transition"
         elif "N/A" in str(context) or "No products found" in str(context):
             gesture = "confused"
@@ -360,15 +400,21 @@ async def process_text_command(request: Request):
             "status": "SPEAKING",
             "audio_url": f"{base}/{filename}",
             "viseme_url": f"{base}/{filename.replace('.wav', '.json')}",
-            "trigger_carousel": trigger_carousel,
-            "asins": asins,
+            "trigger_carousel": new_trigger_carousel,
+            "asins": final_asins,
             "gesture": gesture,
             "last_update_id": SYSTEM_STATE["last_update_id"] + 1
         })
         print(f"Playing: {filename} (Gesture: {gesture})")
     except Exception as e: print(f"TTS Error: {e}")
 
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "text": response_text,
+        "context": context,
+        "trigger_carousel": new_trigger_carousel,
+        "asins": final_asins
+    }
 
 @app.get("/poll_state")
 def poll_state():
@@ -416,6 +462,18 @@ async def handle_gesture(request: Request):
     SYSTEM_STATE["last_update_id"] += 1
     return {"status": "relayed"}
 
+@app.post("/set_focus")
+async def set_focus(request: Request):
+    """React calls this when the user swipes to a new product in the carousel."""
+    global SYSTEM_STATE
+    data = await request.json()
+    asin = data.get("asin")
+    
+    if asin != SYSTEM_STATE["current_focus_asin"]:
+        SYSTEM_STATE["current_focus_asin"] = asin
+        print(f"[SYNC] React focused on ASIN: {asin}")
+        
+    return {"status": "synced", "focused_asin": asin}
 # ==========================================
 # MAIN
 # ==========================================
