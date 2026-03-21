@@ -83,6 +83,40 @@ class ZipVoiceEngine:
         self.vocoder.eval()
         self.feature_extractor = VocosFbank()
 
+    # def speak(self, text, output_path):
+    #     """Passes text directly to the active model without rebooting."""
+    #     # Capture the metrics dictionary returned by the function
+    #     metrics = generate_sentence(
+    #         save_path=output_path,
+    #         prompt_text=self.prompt_text,
+    #         prompt_wav=self.prompt_wav,
+    #         text=text,
+    #         model=self.model,
+    #         vocoder=self.vocoder,
+    #         tokenizer=self.tokenizer,
+    #         feature_extractor=self.feature_extractor,
+    #         device=self.device,
+    #         num_step=4,              # Aggressive speed optimization
+    #         guidance_scale=3.0,      # Default for distill
+    #         speed=1.0,
+    #         t_shift=0.5,
+    #         target_rms=0.1,
+    #         feat_scale=0.1,
+    #         sampling_rate=self.sampling_rate,
+    #         max_duration=30,
+    #         remove_long_sil=False
+    #     )
+    #     torch.cuda.empty_cache()
+        
+    #     # Extract the exact values you requested
+    #     dt = metrics["t"]
+    #     audio_sec = metrics["wav_seconds"]
+    #     rtf = metrics["rtf"]
+        
+    #     # Print the performance depth
+    #     print(f"Time: {dt:.3f}s | Audio: {audio_sec:.3f}s | RTF: {rtf:.3f} (lower is faster)")
+
+    @torch.inference_mode()  # <--- THIS IS THE MAGIC LOCK
     def speak(self, text, output_path):
         """Passes text directly to the active model without rebooting."""
         # Capture the metrics dictionary returned by the function
@@ -103,9 +137,11 @@ class ZipVoiceEngine:
             target_rms=0.1,
             feat_scale=0.1,
             sampling_rate=self.sampling_rate,
-            max_duration=30,
+            max_duration=30,         # <--- DROPPED TO 15 TO CAP VRAM SPIKES
             remove_long_sil=False
         )
+        
+        # Free the tiny bit of cache actually used
         torch.cuda.empty_cache()
         
         # Extract the exact values you requested
