@@ -4,12 +4,15 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from ProposedRouter import *
 from DatabaseRouting import *
+from typing import Optional
 
 # REMOVED: from asin_finder import ASINFinder
 
 class RAGRequest(BaseModel):
     query: str
-    asin: str = None
+    asin: Optional[str] = None          # Used for your gesture exit
+    current_asin: Optional[str] = None  # NEW: Used for carousel focus
+    is_followup: Optional[bool] = False # NEW: Tells RAG this is a carousel question
 
 app = FastAPI()
 
@@ -42,13 +45,10 @@ def get_context(request: RAGRequest):
     print(f"\n[RAG] 📨 Received: {request.query}", flush=True)
 
     try:
-        # --- CASE 3: GESTURE EXIT (Lookup by ASIN) ---
+        # --- CASE 1: GESTURE EXIT (Lookup by ASIN) ---
         if request.query == "<GESTURE_EXIT>" and request.asin:
             print(f"[RAG] 🛑 Handling Exit for ASIN: {request.asin}", flush=True)
-            
-            # USE NEW METHOD IN ROUTER
             context_str = router.get_product_by_asin(request.asin)
-            
             return {
                 "context": context_str, 
                 "intent": "exit", 
@@ -56,12 +56,25 @@ def get_context(request: RAGRequest):
                 "asins": []
             }
 
-        # --- CASE 1 & 2: STANDARD SEARCH ---
+        # --- CASE 2: CAROUSEL FOLLOW-UP QUESTION ---
+        if request.is_followup and request.current_asin:
+            print(f"[RAG] 🎯 Follow-up question focused on ASIN: {request.current_asin}", flush=True)
+            
+            # Grab the exact product the user is looking at in the carousel
+            context_str = router.get_product_by_asin(request.current_asin)
+            
+            # We return empty ASINs so the orchestrator keeps the current carousel list intact
+            return {
+                "context": context_str,
+                "intent": "product_followup",
+                "trigger_carousel": True, 
+            }
+
+        # --- CASE 3: STANDARD SEARCH ---
         print("[RAG] 🧠 Routing...", flush=True)
         predicted_db, confidence = wrapped_proposed_router.route(request.query)
         print(f"[RAG] 🔍 Predicted: {predicted_db} ({confidence:.2f})", flush=True)
         
-        # This now returns a list of DICTS: [{"content": "...", "asin": "B0..."}, ...]
         search_results = router.query(request.query, predicted_db)
         
         asins_found = []
@@ -72,15 +85,11 @@ def get_context(request: RAGRequest):
              trigger_carousel = False
         
         elif predicted_db == "product":
-            # Extract ASINs for React
             asins_found = [item["asin"] for item in search_results if item["asin"]]
-            
-            # Format text for LLM
             formatted_context = router.format_product_list(search_results)
             trigger_carousel = len(asins_found) > 0
         
         else:
-            # For non-product queries (QnA), just join the text
             formatted_context = "\n".join([item["content"] for item in search_results])
             trigger_carousel = False
 
@@ -90,7 +99,7 @@ def get_context(request: RAGRequest):
             "context": formatted_context,
             "intent": predicted_db,
             "trigger_carousel": trigger_carousel,
-            "asins": asins_found # <--- NEW: React needs this!
+            "asins": asins_found 
         }
 
     except Exception as e:
