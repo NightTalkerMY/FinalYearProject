@@ -234,7 +234,7 @@ class XTTSEngine:
 if __name__ == "__main__":
     # Example 1: prefer cloned voice, fallback to built-in if file not present
     engine = XTTSEngine(
-        speaker_wav="sample.wav",   # your cloned voice (if exists)
+        speaker_wav="New Recording.wav",   # your cloned voice (if exists)
         speaker="Ana Florence",        # default built-in voice
         language="en",
         out_dir="outputs_xtts",
