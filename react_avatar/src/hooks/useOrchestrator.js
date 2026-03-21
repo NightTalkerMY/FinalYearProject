@@ -50,6 +50,18 @@ export function useOrchestrator() {
     } catch (e) { console.error(e); }
   };
 
+  // New function used for sending feedback on the asins we are currently selecting
+  const setFocusAsin = useCallback(async (asin) => {
+    if (!asin) return;
+    try {
+      await fetch(`${ORCHESTRATOR_URL}/set_focus`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ asin })
+      });
+    } catch (e) { console.error("Failed to set focus:", e); }
+  }, []);
+
   // FIX: Wrapped in useCallback to prevent re-creation
   const triggerGoodbye = useCallback(async () => {
     try {
@@ -57,5 +69,5 @@ export function useOrchestrator() {
     } catch (e) { console.error(e); }
   }, []);
 
-  return { ...state, resetState, triggerGoodbye };
+  return { ...state, resetState, triggerGoodbye, setFocusAsin};
 }

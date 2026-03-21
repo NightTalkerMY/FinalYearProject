@@ -19,11 +19,11 @@ export function ProductCard({ asin, isSelected }) {
     }
   });
 
-  return (
+    return (
     <group ref={group}>
       <Float speed={2} rotationIntensity={0.2} floatIntensity={0.2}>
-        <Resize scale={1.5}>
-          {/* FIX: Removed 'top' prop. Now it centers perfectly on the axis. */}
+        {/* FIX: Changed scale from 1.5 to 0.5 to make it proportional to the avatar */}
+        <Resize scale={0.85}> 
           <Center>
              <primitive 
                 object={scene} 
