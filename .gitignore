@@ -28,7 +28,11 @@ splitted_datasets/
 .archive/
 
 # 3. react 
-public/
+react_avatar/public/animations/
+react_avatar/public/audios/
+react_avatar/public/json/
+react_avatar/public/models/
+react_avatar/public/products/
 puppeteer-cache/
 puppeteer-data/
 
