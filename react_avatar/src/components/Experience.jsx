@@ -518,7 +518,7 @@ export const Experience = ({ onAudioTrackReady }) => {
             <Carousel 
                asins={asins} 
                selectedIndex={safeIndex} 
-               position={[0.3, 0.8, 0]} 
+               position={[0.1, 0.8, 0]} 
                isExiting={phase === 4 || phase === 7}
             />
           )}

@@ -43,7 +43,7 @@ export function InspectionStage({ asin, visible, gesture, updateId }) {
   if (!visible && scale.get() < 0.01) return null;
 
   return (
-    <group position={[0.3, 1.6, 0]}> 
+    <group position={[0.3, 1.3, -0.1]}> 
       
       {/* HERO LIGHTING */}
       {visible && (

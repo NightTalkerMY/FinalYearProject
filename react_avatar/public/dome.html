@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hologram Dome Receiver</title>
+    <style>
+        body { margin: 0; background-color: black; overflow: hidden; }
+        video { 
+            width: 100vw; 
+            height: 100vh; 
+            object-fit: cover; /* Ensures full dome coverage */
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <video id="video" autoplay playsinline></video>
+
+    <script>
+        // --- CONFIGURATION ---
+        // automatically detect the laptop's IP if served from the same machine
+        const STREAM_URL = `http://${window.location.hostname}:8889/avatar/whep`;
+
+        async function startStream() {
+            const video = document.getElementById('video');
+            const pc = new RTCPeerConnection({
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            });
+
+            pc.addTransceiver('video', { direction: 'recvonly' });
+            pc.addTransceiver('audio', { direction: 'recvonly' });
+
+            pc.ontrack = (event) => {
+                if (video.srcObject !== event.streams[0]) {
+                    video.srcObject = event.streams[0];
+                    console.log("Stream attached!");
+                }
+            };
+
+            // 1. Create Offer
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+
+            // 2. WHEP Exchange with MediaMTX
+            console.log("Connecting to:", STREAM_URL);
+            const response = await fetch(STREAM_URL, {
+                method: 'POST',
+                body: offer.sdp,
+                headers: { 'Content-Type': 'application/sdp' }
+            });
+
+            if (!response.ok) {
+                console.error("WHEP Connection failed");
+                setTimeout(startStream, 2000); // Retry loop
+                return;
+            }
+
+            const answer = await response.text();
+            await pc.setRemoteDescription({ type: 'answer', sdp: answer });
+
+            // 3. FORCE UNMUTE (The Secret Sauce)
+            // Even though 'autoplay' is in the tag, we force it via JS
+            video.muted = false; 
+            video.volume = 1.0;
+        }
+
+        // Start immediately
+        startStream();
+
+        // Keep screen awake hack (optional)
+        if ('wakeLock' in navigator) {
+            navigator.wakeLock.request('screen').catch(() => {});
+        }
+    </script>
+</body>
+</html>
