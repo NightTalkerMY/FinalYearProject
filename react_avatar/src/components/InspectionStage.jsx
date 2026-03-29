@@ -24,8 +24,8 @@ export function InspectionStage({ asin, visible, gesture, updateId }) {
     if (updateId > lastProcessedId.current) {
       const halfPi = Math.PI / 2;
 
-      if (gesture === "swipe_left" || gesture === "left") setTargetRot(p => [p[0], p[1] - halfPi]);
-      else if (gesture === "swipe_right" || gesture === "right") setTargetRot(p => [p[0], p[1] + halfPi]);
+      if (gesture === "swipe_right" || gesture === "right") setTargetRot(p => [p[0], p[1] - halfPi]);
+      else if (gesture === "swipe_left" || gesture === "left") setTargetRot(p => [p[0], p[1] + halfPi]);
       else if (gesture === "swipe_up" || gesture === "up") setTargetRot(p => [p[0] - halfPi, p[1]]);
       else if (gesture === "swipe_down" || gesture === "down") setTargetRot(p => [p[0] + halfPi, p[1]]);
 

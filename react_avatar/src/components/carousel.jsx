@@ -17,13 +17,13 @@ export function Carousel({ asins, selectedIndex = 0, position, isExiting }) {
     <animated.group position-x={position[0]} position-y={slideY} position-z={position[2]}>
       
       {/* --- ACTIVE ITEM HIGHLIGHT --- */}
-      <group position={[0, -0.6, 0]}>
+      <group position={[0, -0.4, 0]}>
          <mesh rotation={[-Math.PI / 2, 0, 0]}>
             {/* FIX: Shrunk the ring from [0.7, 0.9] to [0.45, 0.55] */}
             <ringGeometry args={[0.45, 0.55, 32]} />
             <meshStandardMaterial color="#00ffcc" emissive="#00ffcc" emissiveIntensity={3} />
          </mesh>
-         <pointLight position={[0, 0.5, 0]} intensity={2} color="#00ffcc" distance={1.5} />
+         <pointLight position={[0, 2.0, 1.5]} intensity={3} color="#ffffff" distance={5} />
       </group>
 
       {/* --- ITEMS --- */}

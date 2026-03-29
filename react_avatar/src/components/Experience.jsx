@@ -440,12 +440,12 @@ export const Experience = ({ onAudioTrackReady }) => {
   useEffect(() => {
     // ENTRANCE SEQUENCE
     if (phase === 10) setTimeout(() => setPhase(1), 1000); // Zoom Out -> Wait 1s -> Start Walk
-    if (phase === 1) setTimeout(() => setPhase(2), 2000);  // Walk Left -> Settle
+    if (phase === 1) setTimeout(() => setPhase(2), 1000);  // Walk Left -> Settle
     if (phase === 2) setTimeout(() => setPhase(3), 500);   // Settle -> Carousel Up
     
     // EXIT SEQUENCE
     if (phase === 4) setTimeout(() => setPhase(5), 1000);  // Carousel Down -> Wait 1s -> Start Walk
-    if (phase === 5) setTimeout(() => setPhase(6), 2000);  // Walk Right to Center -> Settle
+    if (phase === 5) setTimeout(() => setPhase(6), 1200);  // Walk Right to Center -> Settle
     if (phase === 6) setTimeout(() => setPhase(0), 1000);  // Zoom In -> Wait 1s -> Idle
     
     // INSPECTION TRANSITIONS
@@ -465,7 +465,8 @@ export const Experience = ({ onAudioTrackReady }) => {
     // Mode 2: Avatar & Carousel (Wide Shot)
     // FIX: Include 10 (Zoom out) and 5 (Walk Right) to hold the wide shot until he is done walking
     else if (phase === 10 || phase === 1 || phase === 2 || phase === 3 || phase === 4 || phase === 5 || phase === 9) {
-       controls.current.setLookAt(-0.4, 1.4, 5.2,  -0.4, 1.0, 0, true);
+      //  controls.current.setLookAt(-0.4, 1.4, 5.2,  -0.4, 1.0, 0, true);
+      controls.current.setLookAt(-0.5, 1.5, 4.0,  -0.5, 1.4, 0, true);
     }
     // Mode 3: Inspection
     else if (phase === 7 || phase === 8) {
@@ -518,7 +519,7 @@ export const Experience = ({ onAudioTrackReady }) => {
             <Carousel 
                asins={asins} 
                selectedIndex={safeIndex} 
-               position={[0.1, 0.8, 0]} 
+               position={[0, 1.4, -0.5]} 
                isExiting={phase === 4 || phase === 7}
             />
           )}
