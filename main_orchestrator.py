@@ -50,8 +50,8 @@ AI_SERVICES = {
     "STT": {"dir": "STT", "url": "http://127.0.0.1:8000/transcribe"},
     "LLM": {"dir": "Chatbot_Phi2", "url": "http://127.0.0.1:8001/chat"},
     "RAG": {"dir": "RAG", "url": "http://127.0.0.1:8002/get_context"},
-    # "TTS": {"dir": "TTS", "url": "http://127.0.0.1:8003/generate_speech"},
     "TTS": {"dir": "TTS/ZipVoice", "url": "http://127.0.0.1:8003/generate_speech"},
+    "LIPSYNC": {"dir": "TTS/allosaurus", "venv": "venv", "url": "http://127.0.0.1:8004", "script": "server.py"}, # for lipsync
     "GESTURE": {
         "dir": "Gesture_System/real-time-HGR-application", 
         "venv": "..\\venv", 
@@ -203,7 +203,9 @@ def launch_ai_services():
             for name, cfg in AI_SERVICES.items():
                 print(f"   > Launching {name}...")
                 venv_path = cfg.get("venv", ".\\venv")
-                cmd = f'cd {cfg["dir"]} && {venv_path}\\Scripts\\activate && python main.py'
+                # cmd = f'cd {cfg["dir"]} && {venv_path}\\Scripts\\activate && python main.py'
+                script_name = cfg.get("script", "main.py")
+                cmd = f'cd {cfg["dir"]} && {venv_path}\\Scripts\\activate && python {script_name}'
                 p = subprocess.Popen(["cmd.exe", "/k", cmd], creationflags=subprocess.CREATE_NEW_CONSOLE)
                 PROCS["ai_services"].append(p)
             
