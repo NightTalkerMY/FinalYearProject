@@ -58,6 +58,7 @@ def main():
                     elapsed = time.time() - start_time
                     if elapsed <= STARTUP_WINDOW:
                         print(f"[WATCHDOG_LOG] Early RTP loss on cam1 ({elapsed:.1f}s). Requesting Pi Restart...")
+                        print("[WATCHDOG_STATUS] CAM1_DROPPED")
                         try:
                             requests.post(PI_RESTART_URL, timeout=3)
                         except Exception as e:

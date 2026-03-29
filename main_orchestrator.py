@@ -52,11 +52,11 @@ AI_SERVICES = {
     "RAG": {"dir": "RAG", "url": "http://127.0.0.1:8002/get_context"},
     # "TTS": {"dir": "TTS", "url": "http://127.0.0.1:8003/generate_speech"},
     "TTS": {"dir": "TTS/ZipVoice", "url": "http://127.0.0.1:8003/generate_speech"},
-    # "GESTURE": {
-    #     "dir": "Gesture_System/real-time-HGR-application", 
-    #     "venv": "..\\venv", 
-    #     "url": "http://127.0.0.1:8889"
-    # } 
+    "GESTURE": {
+        "dir": "Gesture_System/real-time-HGR-application", 
+        "venv": "..\\venv", 
+        "url": "http://127.0.0.1:8889"
+    } 
 }
 
 # ==========================================
@@ -174,22 +174,47 @@ def launch_ai_services():
     if not SYSTEM_STATE["streams"]["avatar"]:
         print("Waiting for Avatar Stream...")
         return
-    # if not SYSTEM_STATE["streams"]["cam1"]:
-    #     print("Waiting for Pi Camera Stream...")
-    #     return
+    if not SYSTEM_STATE["streams"]["cam1"]:
+        print("Waiting for Pi Camera Stream...")
+        return
 
-    print("\n[ORCHESTRATOR] All Streams Stable (Avatar + Cam1). Launching AI Services...")
-    for name, cfg in AI_SERVICES.items():
-        print(f"   > Launching {name}...")
-        venv_path = cfg.get("venv", ".\\venv")
-        # Ensure we change directory to the service folder before activating venv
-        cmd = f'cd {cfg["dir"]} && {venv_path}\\Scripts\\activate && python main.py'
-        p = subprocess.Popen(["cmd.exe", "/k", cmd], creationflags=subprocess.CREATE_NEW_CONSOLE)
-        PROCS["ai_services"].append(p)
+    # print("\n[ORCHESTRATOR] All Streams Stable (Avatar + Cam1). Launching AI Services...")
+    # for name, cfg in AI_SERVICES.items():
+    #     print(f"   > Launching {name}...")
+    #     venv_path = cfg.get("venv", ".\\venv")
+    #     # Ensure we change directory to the service folder before activating venv
+    #     cmd = f'cd {cfg["dir"]} && {venv_path}\\Scripts\\activate && python main.py'
+    #     p = subprocess.Popen(["cmd.exe", "/k", cmd], creationflags=subprocess.CREATE_NEW_CONSOLE)
+    #     PROCS["ai_services"].append(p)
     
-    SYSTEM_STATE["ai_launched"] = True
-    SYSTEM_STATE["status"] = "IDLE"
-    print("[ORCHESTRATOR] All Systems Operational.\n")
+    # SYSTEM_STATE["ai_launched"] = True
+    # SYSTEM_STATE["status"] = "IDLE"
+    # print("[ORCHESTRATOR] All Systems Operational.\n")
+    def delayed_launch():
+        print("\n[ORCHESTRATOR] Streams connected. Waiting 4 seconds to verify stability...")
+        # Give MediaMTX time to detect any RTP packet loss
+        time.sleep(4) 
+        
+        # Check if they are STILL connected after the wait
+        if SYSTEM_STATE["streams"]["avatar"] and SYSTEM_STATE["streams"]["cam1"]:
+            if SYSTEM_STATE["ai_launched"]: return # Double-check to prevent duplicate launches
+            
+            print("\n[ORCHESTRATOR] Streams STABLE. Launching AI Services...")
+            for name, cfg in AI_SERVICES.items():
+                print(f"   > Launching {name}...")
+                venv_path = cfg.get("venv", ".\\venv")
+                cmd = f'cd {cfg["dir"]} && {venv_path}\\Scripts\\activate && python main.py'
+                p = subprocess.Popen(["cmd.exe", "/k", cmd], creationflags=subprocess.CREATE_NEW_CONSOLE)
+                PROCS["ai_services"].append(p)
+            
+            SYSTEM_STATE["ai_launched"] = True
+            SYSTEM_STATE["status"] = "IDLE"
+            print("[ORCHESTRATOR] All Systems Operational.\n")
+        else:
+            print("\n[ORCHESTRATOR] Stability check failed (RTP Drop Detected). Waiting for stream to recover...")
+
+    # Run the delay in a separate thread so it doesn't block the watchdog listener from reading new logs
+    threading.Thread(target=delayed_launch, daemon=True).start()
 
 # ==========================================
 # WATCHDOG LISTENER THREAD
@@ -240,6 +265,11 @@ def watchdog_listener():
                         print("[ORCHESTRATOR] Pi Camera Connected.")
                         SYSTEM_STATE["streams"]["cam1"] = True
                         launch_ai_services()
+
+                # --- ADD THIS NEW BLOCK ---
+                elif "[WATCHDOG_STATUS] CAM1_DROPPED" in line:
+                    print("[ORCHESTRATOR] Cam1 Dropped! Resetting status.")
+                    SYSTEM_STATE["streams"]["cam1"] = False
 
             except Exception:
                 continue
