@@ -444,7 +444,7 @@ export const Experience = ({ onAudioTrackReady }) => {
     if (phase === 2) setTimeout(() => setPhase(3), 500);   // Settle -> Carousel Up
     
     // EXIT SEQUENCE
-    if (phase === 4) setTimeout(() => setPhase(5), 1000);  // Carousel Down -> Wait 1s -> Start Walk
+    if (phase === 4) setTimeout(() => setPhase(5), 10);  // Carousel Down -> Wait 1s -> Start Walk
     if (phase === 5) setTimeout(() => setPhase(6), 1200);  // Walk Right to Center -> Settle
     if (phase === 6) setTimeout(() => setPhase(0), 1000);  // Zoom In -> Wait 1s -> Idle
     
