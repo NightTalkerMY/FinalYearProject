@@ -74,6 +74,19 @@ BASE_MODEL_ID = "microsoft/phi-2"
 # TUNED_MODEL_PATH = "models/phi2_retail_native_bf16_c6e0c0"
 TUNED_MODEL_PATH = "models/phi2_retail_native_bf16_38f4a5"
 
+### Format cprrections ###
+FORMAT_REPLACEMENTS = [
+    (r"\bIm\b", "I'm"),
+    (r"\bdont\b", "don't"),
+    (r"\bcant\b", "can't"),
+    (r"\bhighenergy\b", "high energy"),
+    (r"\bperformancegear\b", "high energy"), 
+    # (r"\bequationsmy\b", "equations ,my"),
+    # (r"\brecipesmy\b", "recipe ,my"),
+    # (r"\bcodingmy\b", "coding] ,my"),
+    (r"([a-zA-Z])my\b", r"\1, my")
+]
+
 # -----------------------------
 # Stopper: stop at <END_OF_RESPONSE>
 # -----------------------------
@@ -180,6 +193,10 @@ async def chat(request: Request):
     response_text = response_text.split("<END_OF_RESPONSE>", 1)[0]
     # Keep your regex as extra safety
     response_text = re.sub(r"<END_OF_RESPONSE.*", "", response_text, flags=re.DOTALL).strip()
+
+    ### Clean formatting here ###
+    for pattern, replacement in FORMAT_REPLACEMENTS:
+        response_text = re.sub(pattern, replacement, response_text)
 
     # --- MEMORY CLEANUP ---
     # Delete the large tensors used in this specific generation cycle
