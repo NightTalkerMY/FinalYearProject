@@ -238,7 +238,19 @@ def live_stream_hgr(nD):
             prev_cx, prev_cy = cx, cy
 
         else:
-            gate.reset()
+            # gate.reset()
+            # pre_buffer.clear() 
+            # frozen_pos_2d = None
+            # Capture the exit state from the new reset logic
+            exit_state = gate.reset()
+            
+            if exit_state == "FINISHED":
+                capture_count += 1
+                print(f"\n>>> CAPTURE {capture_count} SUCCESS! (Off-screen Exit)")
+                gs_logger() 
+            
+            # General cleanup for lost hand
+            gs_deque.clear()
             pre_buffer.clear() 
             frozen_pos_2d = None
 

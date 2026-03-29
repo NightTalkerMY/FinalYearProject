@@ -6,7 +6,7 @@ class BoxGate:
         self.MIN_FRAMES = 8
         self.BOX_RADIUS = 0.08      # Stricter Swipe (8cm)
         self.SCALE_THRESH = 0.01   # Stricter Grab
-        self.stop_frame = 0
+        self.stop_frame = 2
         
         # STATE
         self.is_recording = False
@@ -121,9 +121,34 @@ class BoxGate:
         return state, debug_val
 
     ## This is where we need to reset on loss of hand
+    # def reset(self):
+    #     self.is_recording = False
+    #     self.anchor_pos = None
+    #     self.anchor_scale = None
+    #     self.stop_counter = 0
+    #     self.warmup_counter = 7 # Reset back 
+    ## This is where we need to reset on loss of hand
     def reset(self):
+        final_state = "IDLE"
+        
+        # Check if a valid gesture was in progress when the hand was lost
+        if self.is_recording:
+            if self.frame_count >= self.MIN_FRAMES:
+                final_state = "FINISHED"
+            else:
+                final_state = "REJECTED"
+
+        # Hard wipe the state
         self.is_recording = False
         self.anchor_pos = None
         self.anchor_scale = None
         self.stop_counter = 0
         self.warmup_counter = 7 # Reset back 
+        
+        # Clean up prev variables if they exist
+        if hasattr(self, 'prev_pos'):
+            del self.prev_pos
+        if hasattr(self, 'prev_scale'):
+            del self.prev_scale
+            
+        return final_state
