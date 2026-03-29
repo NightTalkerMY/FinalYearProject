@@ -243,10 +243,32 @@ def main():
         _archive()
 
     else:
+        # if not (args.idle) and args.debug_mode:
+        #     print("INFO: Waiting for data files...")
+        # args.idle = True
+        # time.sleep(0.5) 
         if not (args.idle) and args.debug_mode:
             print("INFO: Waiting for data files...")
         args.idle = True
-        time.sleep(0.5) 
+        
+        # --- NEW: KEEP WARM HEARTBEAT ---
+        # Every 5 seconds, send a blank tensor through the model
+        # This prevents Windows from paging RAM and the GPU from sleeping
+        current_time = time.time()
+        if not hasattr(args, 'last_warmup'): args.last_warmup = current_time
+        
+        if current_time - args.last_warmup > 5.0:
+            try:
+                with torch.no_grad(): # Don't track gradients
+                    # Create a dummy image tensor (1 image, 3 channels, 224x224)
+                    # Adjust the 224x224 to match your specific image size if different
+                    dummy_input = torch.zeros(1, 3, 224, 224).to(defaults.device)
+                    _ = learn.model(dummy_input)
+                args.last_warmup = current_time
+            except Exception:
+                pass # Fail silently if the shape is slightly off, the attempt still wakes the GPU
+                
+        time.sleep(0.5)
 
 if __name__ == "__main__":
     _archive()

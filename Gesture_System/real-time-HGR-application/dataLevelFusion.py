@@ -496,7 +496,18 @@ def _make_colored_fingers():
 def update(null):
     global viz_frozen, idx_sleleton, tips_coords, l_data_files
 
-    if idx_sleleton == cfg.gs_length:
+    # --- [THE FIX: BREAK OUT OF IDLE TRAP] ---
+    # If idling (l_data_files == 0), peek at the directory every 5 frames.
+    # If a new gesture arrives, force idx_sleleton to the end to process it instantly.
+    if l_data_files == 0 and idx_sleleton % 5 == 0:
+        try:
+            if next(cfg.gs_data_directory.iterdir(), None) is not None:
+                idx_sleleton = cfg.gs_length 
+        except Exception:
+            pass
+    # -----------------------------------------
+
+    if idx_sleleton >= cfg.gs_length:
         idx_sleleton = 0
         if l_data_files:
             create_sequence_png()
@@ -563,8 +574,15 @@ canvas = scene.SceneCanvas(
     vsync=False,
     bgcolor="black",
     size=(960, 960), # Keep size for correct resolution
-    show=False # <--- HIDDEN
+    show=True # <--- HIDDEN
 )
+
+# --- THE OFF-SCREEN HACK ---
+# Move the window 5000 pixels to the right, effectively hiding it from your screen
+# without triggering Windows' minimized-window throttling.
+if hasattr(canvas.native, 'move'):
+    canvas.native.move(5000, 5000)
+# ---------------------------
 
 view = canvas.central_widget.add_view()
 view.camera = "turntable"
