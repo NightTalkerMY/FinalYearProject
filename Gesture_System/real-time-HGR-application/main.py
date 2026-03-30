@@ -166,6 +166,9 @@ def live_stream_hgr(nD):
     frozen_pos_2d = None
     frozen_scale_px = None
     prev_cx, prev_cy = 0, 0
+
+    last_capture_time = 0  
+    COOLDOWN_SEC = 1 # Adjust this value (in seconds) based on how fast users swipe
     
     _color_fingers()
     print("INFO: Initialized <main.py> (WebRTC Mode)...")
@@ -191,8 +194,17 @@ def live_stream_hgr(nD):
             curr_scale_3d = np.mean(np.linalg.norm(tips - lmCoords[0], axis=1))
             curr_radius_px = int(curr_scale_3d * (60 / 0.08))
 
-            state, val = gate.process(lmCoords)
-            pre_buffer.append(lmCoords)
+            # state, val = gate.process(lmCoords)
+            # pre_buffer.append(lmCoords)
+
+            if time.time() - last_capture_time < COOLDOWN_SEC:
+                state = "COOLDOWN"
+                gate.reset()       # Ensure the gate doesn't accumulate background noise
+                pre_buffer.clear() # Keep buffers clean
+                frozen_pos_2d = None
+            else:
+                state, val = gate.process(lmCoords)
+                pre_buffer.append(lmCoords)
 
             if state == "RECORDING":
                 if gate.frame_count == 1:
@@ -211,6 +223,7 @@ def live_stream_hgr(nD):
                 gs_logger() 
                 gs_deque.clear()
                 pre_buffer.clear() 
+                last_capture_time = time.time() 
 
             elif state == "REJECTED":
                 gs_deque.clear()
