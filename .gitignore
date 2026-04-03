@@ -15,6 +15,7 @@ mediamtx.exe
 .vscode/
 __pycache__/
 python/
+python_379/
 
 ## Ignore the rest ##
 # 1. chatbot 
