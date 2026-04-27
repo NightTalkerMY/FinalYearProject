@@ -1,0 +1,10 @@
+--extra-index-url https://download.pytorch.org/whl/cu121
+
+torch
+opencv-python
+numpy
+python_speech_features
+pandas
+tqdm
+ipdb
+scikit-learn
