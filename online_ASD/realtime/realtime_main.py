@@ -35,9 +35,9 @@ ACTUAL_FPS = cap.get(cv2.CAP_PROP_FPS) or 25.0
 cap.release()
 print(f"Detected exact video FPS: {ACTUAL_FPS:.2f}")
 
-SENSITIVITY = 0.5    
-DETECT_INTERVAL = 1    # FIX 2: Detect EVERY frame to prevent ID swapping/hallucinations
-INFERENCE_INTERVAL = 2
+SENSITIVITY = 0.5
+DETECT_INTERVAL = 5    # Tracker interpolates between detections
+INFERENCE_INTERVAL = 12
 WINDOW_SIZE = 50       
 MAX_SPEAKERS = 5       
 AUDIO_SAMPLE_RATE = 16000
@@ -50,14 +50,15 @@ class MasterTranslator(nn.Module):
     def __init__(self, pretrain_dir):
         super().__init__()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        
+        self.use_fp16 = (self.device.type == 'cuda')
+
         # self.cue_configs = [
         #     {'name': 'face',            'path': 'face_model',             'size': 112},
         #     {'name': 'face_body_large', 'path': 'body_large_model',       'size': 224},
-        #     {'name': 'face_large',      'path': 'face_large_model',       'size': 112}, 
-        #     {'name': 'face_body',       'path': 'body_model',             'size': 224}, 
+        #     {'name': 'face_large',      'path': 'face_large_model',       'size': 112},
+        #     {'name': 'face_body',       'path': 'body_model',             'size': 224},
         #     {'name': 'face_small',      'path': 'face_small_model',       'size': 112},
-        #     {'name': 'background',      'path': 'background_model.model', 'size': 224}, 
+        #     {'name': 'background',      'path': 'background_model.model', 'size': 224},
         #     {'name': 'face_down',       'path': 'face_down_model',        'size': 112}
         # ]
         self.cue_configs = [
@@ -69,11 +70,11 @@ class MasterTranslator(nn.Module):
             {'name': 'face_small',      'path': 'face_small_model',       'size': 112}, # Moved down
             {'name': 'face_down',       'path': 'face_down_model',        'size': 112}
         ]
-            
+
         self.visual_encoders = nn.ModuleDict()
         self.audio_encoder = None
-        
-        print("--- Booting Master Translator (Loading 7 CNNs to VRAM) ---")
+
+        print("--- Booting Master Translator (Loading 7 CNNs, fp16=%s) ---" % self.use_fp16)
         for config in self.cue_configs:
             name = config['name']
             full_path = os.path.join(pretrain_dir, config['path'])
@@ -82,33 +83,43 @@ class MasterTranslator(nn.Module):
                 s.loadParameters_multi(full_path)
             else:
                 s.loadParameters(full_path)
-                
+
             s.eval()
-            self.visual_encoders[name] = s.model.visualEncoder.to(self.device)
+            encoder = s.model.visualEncoder.to(self.device)
+            if self.use_fp16:
+                encoder = encoder.half()
+            self.visual_encoders[name] = encoder
             if name == 'face':
-                self.audio_encoder = s.model.audioEncoder.to(self.device)
+                audio_enc = s.model.audioEncoder.to(self.device)
+                if self.use_fp16:
+                    audio_enc = audio_enc.half()
+                self.audio_encoder = audio_enc
 
     def forward_visual(self, crops_dict):
         visual_vectors = []
-        with torch.no_grad():
+        with torch.inference_mode():
             for config in self.cue_configs:
                 name = config['name']
                 crop_seq = crops_dict[name] # [50, size, size]
-                
+
                 crop_tensor = torch.FloatTensor(crop_seq).unsqueeze(0).unsqueeze(0).to(self.device)
                 crop_tensor = (crop_tensor / 255.0 - 0.4161) / 0.1688
-                
+                if self.use_fp16:
+                    crop_tensor = crop_tensor.half()
+
                 v_feat = self.visual_encoders[name](crop_tensor) # [1, 50, 128]
-                visual_vectors.append(v_feat.squeeze(0).cpu().numpy()) 
-                
+                visual_vectors.append(v_feat.squeeze(0).float().cpu().numpy())
+
         return np.concatenate(visual_vectors, axis=-1) # [50, 896]
 
     def forward_audio(self, continuous_audio):
-        with torch.no_grad():
+        with torch.inference_mode():
             a_tensor = torch.FloatTensor(continuous_audio).unsqueeze(0).to(self.device)
-            a_tensor = a_tensor.unsqueeze(1).transpose(2, 3) 
-            a_feat = self.audio_encoder(a_tensor) 
-        return a_feat.squeeze(0).cpu().numpy() # [50, 128]
+            a_tensor = a_tensor.unsqueeze(1).transpose(2, 3)
+            if self.use_fp16:
+                a_tensor = a_tensor.half()
+            a_feat = self.audio_encoder(a_tensor)
+        return a_feat.squeeze(0).float().cpu().numpy() # [50, 128]
 
 def get_crop(img_gray, x1, y1, x2, y2, size):
     h, w = img_gray.shape
@@ -210,7 +221,10 @@ def main():
                 for slot, tid in speaker_mapping.items():
                     new_prob = frame_probs[slot, 1].item()
                     old_prob = ai_state_cache.get(tid, new_prob)
-                    ai_state_cache[tid] = 0.4 * new_prob + 0.6 * old_prob
+                    if new_prob > old_prob:  # onset: react fast
+                        ai_state_cache[tid] = 0.85 * new_prob + 0.15 * old_prob
+                    else:                    # offset: smooth as before
+                        ai_state_cache[tid] = 0.6 * new_prob + 0.4 * old_prob
 
     inference_thread = threading.Thread(target=inference_worker, daemon=True)
     inference_thread.start()

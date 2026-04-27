@@ -128,7 +128,7 @@ class ASD(nn.Module):
 
     def loadParameters(self, path):
         selfState = self.state_dict()
-        loadedState = torch.load(path)
+        loadedState = torch.load(path, weights_only=True)
         for name, param in loadedState.items():
             origName = name;
             if name not in selfState:
