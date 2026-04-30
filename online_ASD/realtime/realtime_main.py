@@ -24,8 +24,9 @@ from ASD import ASD
 # CONFIGURATION
 # ==========================================
 MODE = "FILE"  
-VIDEO_FILE = r"D:\FYP\MSSG\realtime\test_video\gay\gay.mp4"
-AUDIO_FILE = r"D:\FYP\MSSG\realtime\test_video\gay\gay.wav"
+videoName = "iamgay"
+VIDEO_FILE = rf"D:\FYP\MSSG\realtime\test_video\{videoName}\{videoName}.mp4"
+AUDIO_FILE = rf"D:\FYP\MSSG\realtime\test_video\{videoName}\{videoName}.wav"
 PRETRAIN_DIR = "pretrain_model" 
 STUDENT_WEIGHTS = r"D:\FYP\MSSG\realtime\realtime_epoch\holopi_student_best.pt"
 
@@ -37,7 +38,8 @@ print(f"Detected exact video FPS: {ACTUAL_FPS:.2f}")
 
 SENSITIVITY = 0.5
 DETECT_INTERVAL = 5    # Tracker interpolates between detections
-INFERENCE_INTERVAL = 12
+INFERENCE_INTERVAL = 6  # Reduced from 12 for faster onset detection
+MIN_FRAMES_FOR_INFERENCE = 15  # Allow partial windows (pad the rest)
 WINDOW_SIZE = 50       
 MAX_SPEAKERS = 5       
 AUDIO_SAMPLE_RATE = 16000
@@ -221,8 +223,8 @@ def main():
                 for slot, tid in speaker_mapping.items():
                     new_prob = frame_probs[slot, 1].item()
                     old_prob = ai_state_cache.get(tid, new_prob)
-                    if new_prob > old_prob:  # onset: react fast
-                        ai_state_cache[tid] = 0.85 * new_prob + 0.15 * old_prob
+                    if new_prob > old_prob:  # onset: near-instant reaction
+                        ai_state_cache[tid] = 0.95 * new_prob + 0.05 * old_prob
                     else:                    # offset: smooth as before
                         ai_state_cache[tid] = 0.6 * new_prob + 0.4 * old_prob
 
@@ -323,20 +325,37 @@ def main():
                 bbox_history[track_id].append([x1, y1, x2, y2])
 
             # 4. SUBMIT INFERENCE TO BACKGROUND THREAD (NON-BLOCKING)
-            if len(display_buffer) == WINDOW_SIZE and frame_idx % INFERENCE_INTERVAL == 0:
-                snap = {'audio': list(global_audio_buffer), 'tracks': {}}
+            if len(global_audio_buffer) >= MIN_FRAMES_FOR_INFERENCE and frame_idx % INFERENCE_INTERVAL == 0:
+                audio_list = list(global_audio_buffer)
+                if len(audio_list) < WINDOW_SIZE:
+                    # Pad audio with silence at the front
+                    pad_audio = [np.zeros_like(audio_list[0])] * (WINDOW_SIZE - len(audio_list))
+                    audio_list = pad_audio + audio_list
+                snap = {'audio': audio_list, 'tracks': {}}
                 for track_id, history in track_history.items():
-                    if len(history['s']) == WINDOW_SIZE:
-                        snap['tracks'][track_id] = {
-                            'raw_v': {k: list(history['raw_v'][k]) for k in history['raw_v']},
-                            's': list(history['s'])
-                        }
+                    n_frames = len(history['s'])
+                    if n_frames >= MIN_FRAMES_FOR_INFERENCE:
+                        if n_frames < WINDOW_SIZE:
+                            # Pad partial windows by repeating the first frame
+                            pad_len = WINDOW_SIZE - n_frames
+                            raw_v_padded = {}
+                            for k in history['raw_v']:
+                                frames_list = list(history['raw_v'][k])
+                                raw_v_padded[k] = [frames_list[0]] * pad_len + frames_list
+                            s_list = list(history['s'])
+                            s_padded = [s_list[0]] * pad_len + s_list
+                            snap['tracks'][track_id] = {'raw_v': raw_v_padded, 's': s_padded}
+                        else:
+                            snap['tracks'][track_id] = {
+                                'raw_v': {k: list(history['raw_v'][k]) for k in history['raw_v']},
+                                's': list(history['s'])
+                            }
                 if snap['tracks']:
                     with snapshot_lock:
                         pending_snapshot[0] = snap
 
             # 5. SMOOTH ASYNCHRONOUS DRAWING (EVERY FRAME)
-            if len(display_buffer) == WINDOW_SIZE:
+            if len(display_buffer) >= MIN_FRAMES_FOR_INFERENCE:
                 display_frame = display_buffer[-1].copy()
                 
                 for track_id, bbox_list in bbox_history.items():
