@@ -2,127 +2,147 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class CausalGraphNet(nn.Module):
-    """
-    A pure PyTorch implementation of the Causal MSSG Graph.
-    Avoids torch_geometric dependencies for easier Raspberry Pi 5 deployment.
-    """
-    def __init__(self, in_features=128, out_features=128):
-        super(CausalGraphNet, self).__init__()
-        # The Graph Convolution weight matrix
-        self.weight = nn.Parameter(torch.Tensor(in_features, out_features))
-        nn.init.xavier_uniform_(self.weight)
-        
-    def forward(self, x, mask):
-        # x shape: [Batch, Speakers(5), Frames(50), 128]
-        # mask shape: [Batch, Speakers(5), Frames(50)]
-        B, S, T, D = x.shape
-        
-        # Flatten spatial and temporal dimensions to create nodes: [B, S*T, 128]
-        x_flat = x.view(B, S * T, D)
-        mask_flat = mask.view(B, S * T)
-        
-        # 1. Initialize an empty Adjacency Matrix A [B, S*T, S*T]
-        # A will dictate which nodes can "talk" to which other nodes.
-        A = torch.zeros((B, S * T, S * T), device=x.device)
-        
-        # 2. Build the Causal Edges (Intra-speaker and Inter-speaker)
-        for s in range(S):
-            for t in range(T):
-                current_node = s * T + t
-                
-                # A. Intra-speaker (Temporal): Connect to own past frames
-                # Strict Causal Rule: t_prev must be <= t
-                for t_prev in range(max(0, t - 3), t + 1): # Look back up to 3 frames
-                    past_node = s * T + t_prev
-                    A[:, current_node, past_node] = 1.0
-                    
-                # B. Inter-speaker (Spatial): Connect to other speakers in the EXACT SAME frame
-                for other_s in range(S):
-                    if other_s != s:
-                        other_node = other_s * T + t
-                        A[:, current_node, other_node] = 1.0
 
-        # 3. Apply the Ghost Hunter Mask!
-        # If a node is a ghost (mask == 0), sever all connections to it
-        valid_matrix = mask_flat.unsqueeze(1) * mask_flat.unsqueeze(2) # [B, S*T, S*T]
-        A = A * valid_matrix
-        
-        # Normalize the adjacency matrix to prevent exploding gradients
-        row_sum = A.sum(dim=-1, keepdim=True).clamp(min=1e-9)
-        A_norm = A / row_sum
-        
-        # 4. Perform the Graph Convolution: Output = A_norm * (X * W)
-        node_transform = torch.matmul(x_flat, self.weight) # [B, S*T, 128]
-        graph_out = torch.bmm(A_norm, node_transform)      # [B, S*T, 128]
-        
-        # Reshape back to our 4D structure and add a residual connection
-        graph_out = graph_out.view(B, S, T, D)
-        return F.relu(graph_out + x)
+class CrossSpeakerAttention(nn.Module):
+    """
+    Replaces CausalGraphNet. At each timestep, speakers attend to each other
+    via multi-head attention — learns WHO to attend to and WHAT to extract.
+    Ghost speakers are masked out.
+    """
+    def __init__(self, hidden_dim=128, num_heads=4, dropout=0.1):
+        super().__init__()
+        self.mha = nn.MultiheadAttention(
+            embed_dim=hidden_dim, num_heads=num_heads,
+            batch_first=True, dropout=dropout
+        )
+        self.layer_norm = nn.LayerNorm(hidden_dim)
+
+    def forward(self, x, mask):
+        # x: [B, S, T, D], mask: [B, S, T]
+        B, S, T, D = x.shape
+
+        # Reshape to [B*T, S, D] — at each timestep, speakers attend to each other
+        x_cross = x.permute(0, 2, 1, 3).reshape(B * T, S, D)
+
+        # Build key_padding_mask: [B*T, S] — True means IGNORE this speaker
+        mask_cross = mask.permute(0, 2, 1).reshape(B * T, S)  # [B*T, S]
+        key_padding_mask = mask_cross < 0.5  # True = ghost = ignore
+
+        # If all speakers are ghosts at a timestep, skip masking to avoid NaN
+        all_masked = key_padding_mask.all(dim=-1)  # [B*T]
+        key_padding_mask[all_masked] = False  # allow attention (features are zero anyway)
+
+        attn_out, _ = self.mha(
+            x_cross, x_cross, x_cross,
+            key_padding_mask=key_padding_mask
+        )
+        out = self.layer_norm(x_cross + attn_out)
+
+        # Reshape back to [B, S, T, D]
+        out = out.reshape(B, T, S, D).permute(0, 2, 1, 3)
+        return out
+
 
 class CausalStudentASD(nn.Module):
-    def __init__(self, visual_dim=896, hidden_dim=128, num_classes=2):
+    NUM_SCALES = 7
+    SCALE_DIM = 128  # Each of the 7 visual scales is 128-dim in the cache
+
+    def __init__(self, hidden_dim=128, num_classes=2):
         super(CausalStudentASD, self).__init__()
-        
-        # 1. Visual Compression Layer
-        # Shrinks the 896 concatenated visual features down to 128 to match the audio
-        self.v_proj = nn.Linear(visual_dim, hidden_dim)
-        
-        # 2. The Causal Sequence Module
-        # batch_first=True, bidirectional=False (Crucial for real-time causality)
-        self.gru = nn.GRU(hidden_dim, hidden_dim, num_layers=1, batch_first=True, bidirectional=False)
-        
-        # Buffer Attention (Multihead)
-        self.mha = nn.MultiheadAttention(embed_dim=hidden_dim, num_heads=4, batch_first=True)
-        self.layer_norm = nn.LayerNorm(hidden_dim)
-        
-        # 3. The Causal Graph
-        self.causal_graph = CausalGraphNet(in_features=hidden_dim, out_features=hidden_dim)
-        
-        # 4. The Final Classifier
+
+        # 1. Per-scale visual projections (preserves scale independence)
+        self.scale_projs = nn.ModuleList([
+            nn.Sequential(
+                nn.Linear(self.SCALE_DIM, 64),
+                nn.ReLU(),
+                nn.Dropout(0.1),
+            )
+            for _ in range(self.NUM_SCALES)
+        ])
+
+        # 2. Spatial-aware scale attention
+        self.scale_attn = nn.Sequential(
+            nn.Linear(4, 32),
+            nn.ReLU(),
+            nn.Linear(32, self.NUM_SCALES),
+        )
+
+        # 3. Scale fusion → hidden_dim
+        self.fuse = nn.Sequential(
+            nn.Linear(64, hidden_dim),
+            nn.ReLU(),
+        )
+
+        # 4. Causal GRU (2-layer with dropout)
+        self.gru = nn.GRU(hidden_dim, hidden_dim, num_layers=2,
+                          batch_first=True, bidirectional=False, dropout=0.1)
+
+        # 5. Buffer Attention (Multihead with dropout)
+        self.mha = nn.MultiheadAttention(embed_dim=hidden_dim, num_heads=4,
+                                         batch_first=True, dropout=0.1)
+        self.temporal_norm = nn.LayerNorm(hidden_dim)
+
+        # 6. Gated FFN — mimics teacher's backward GRU gated feedforward transform
+        self.gate_proj = nn.Linear(hidden_dim, hidden_dim)
+        self.value_proj = nn.Linear(hidden_dim, hidden_dim)
+        self.ffn_norm = nn.LayerNorm(hidden_dim)
+
+        # 7. Cross-Speaker Attention (replaces CausalGraphNet)
+        self.cross_speaker = CrossSpeakerAttention(hidden_dim, num_heads=4, dropout=0.1)
+
+        # 8. The Final Classifier (with dropout)
+        self.feat_dropout = nn.Dropout(0.1)
         self.classifier = nn.Linear(hidden_dim, num_classes)
 
     def forward(self, v, a, s_cues, mask):
         """
-        v: Visual features [B, 5, 50, 896]
+        v: Visual features [B, 5, 50, 896] — 7 scales × 128-dim concatenated
         a: Audio features [B, 5, 50, 128]
-        s_cues: Spatial info [B, 5, 50, 4] (Passed for future architectural expansion)
+        s_cues: Spatial info [B, 5, 50, 4] — face position/size [cx, cy, w, h]
         mask: Valid node mask [B, 5, 50]
         """
         B, S, T, _ = v.shape
-        
-        # Step 1: Compress Visuals
-        v_compressed = F.relu(self.v_proj(v)) # [B, S, T, 128]
-        
-        # Step 2: Modality Fusion (Simple Addition, fast for Raspberry Pi)
-        x = v_compressed + a # [B, S, T, 128]
-        
-        # Step 3: Sequence Processing (Process each speaker's timeline independently)
-        # Reshape to [B * S, T, 128] so the GRU processes 5 timelines in parallel
-        x_seq = x.view(B * S, T, 128)
 
-        gru_out, _ = self.gru(x_seq) # gru_out: [B * S, T, 128]
+        # Step 1: Per-scale visual processing
+        scale_feats = []
+        for i, proj in enumerate(self.scale_projs):
+            scale_v = v[:, :, :, i * self.SCALE_DIM:(i + 1) * self.SCALE_DIM]
+            scale_feats.append(proj(scale_v))
+        scale_stack = torch.stack(scale_feats, dim=3)  # [B,S,T,7,64]
 
-        # Step 4: Buffer Attention with Strict Causal Mask
-        # The mask forces the attention layer to ignore future frames
-        causal_mask = torch.triu(torch.ones(T, T) * float('-inf'), diagonal=1).to(v.device)
+        # Step 2: Spatial-aware scale attention
+        attn_weights = F.softmax(self.scale_attn(s_cues), dim=-1)  # [B,S,T,7]
+        v_fused = (scale_stack * attn_weights.unsqueeze(-1)).sum(dim=3)  # [B,S,T,64]
 
+        # Step 3: Fuse to hidden_dim + audio
+        x = self.fuse(v_fused) + a  # [B,S,T,128]
+
+        # Step 4: Causal temporal processing (each speaker independently)
+        D = x.shape[-1]
+        x_seq = x.view(B * S, T, D)
+        gru_out, _ = self.gru(x_seq)  # [B*S, T, 128]
+
+        # Step 5: Buffer Attention with Strict Causal Mask
+        causal_mask = torch.triu(torch.ones(T, T, device=v.device) * float('-inf'), diagonal=1)
         attn_out, _ = self.mha(gru_out, gru_out, gru_out, attn_mask=causal_mask)
-        seq_features = self.layer_norm(gru_out + attn_out) # Residual connection
+        seq_features = self.temporal_norm(gru_out + attn_out)
+
+        # Step 6: Gated FFN — backward GRU equivalent
+        gate = torch.sigmoid(self.gate_proj(seq_features))
+        value = torch.tanh(self.value_proj(seq_features))
+        seq_features = self.ffn_norm(seq_features + gate * value)
 
         # Reshape back to the scene matrix
-        seq_features = seq_features.view(B, S, T, 128)
+        seq_features = seq_features.view(B, S, T, D)
 
-        # Zero out ghost speaker outputs so GRU artifacts don't leak into the graph
-        seq_features = seq_features * mask.unsqueeze(-1)  # mask: [B,S,T] → [B,S,T,1]
-        
-        # Step 5: Inter/Intra Speaker Graph Routing
-        # This is where the student mimics the Teacher's MSSG behavior
-        graph_features = self.causal_graph(seq_features, mask)
+        # Zero out ghost speaker outputs
+        seq_features = seq_features * mask.unsqueeze(-1)
 
-        # Step 6: Classification
-        logits = self.classifier(graph_features) # [B, S, T, 2]
+        # Step 7: Cross-Speaker Attention (replaces graph)
+        graph_features = self.cross_speaker(seq_features, mask)
 
-        # Return logits (for CE) and pre-graph features (for KD MSE against teacher_av,
-        # which is also a pre-graph representation from the teacher's BiGRU output)
+        # Step 8: Classification
+        logits = self.classifier(self.feat_dropout(graph_features))  # [B, S, T, 2]
+
+        # Return logits (for CE) and pre-graph features (for KD MSE)
         return logits, seq_features

@@ -27,7 +27,7 @@ MODE = "FILE"
 VIDEO_FILE = r"D:\FYP\MSSG\realtime\test_video\gay\gay.mp4"
 AUDIO_FILE = r"D:\FYP\MSSG\realtime\test_video\gay\gay.wav"
 PRETRAIN_DIR = "pretrain_model" 
-STUDENT_WEIGHTS = "pretrain_model\holopi_student_best.pt"
+STUDENT_WEIGHTS = r"D:\FYP\MSSG\realtime\realtime_epoch\holopi_student_best.pt"
 
 # --- FIX 1: DYNAMIC FPS MATH ---
 cap = cv2.VideoCapture(VIDEO_FILE)
