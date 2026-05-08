@@ -1,0 +1,7 @@
+Trigger Scenario,method,n_total_trials,activation_reliability_percent,segmentation_purity_percent,recognition_efficiency,inference_accuracy
+scale_trigger,baseline_manual,10,,18.311291453976672,60.18526451482482,100.0
+scale_trigger,proposed_auto,10,100.0,53.232056832056834,100.0,100.0
+scale_trigger,reference_spotter,10,100.0,38.62068965517241,100.0,100.0
+wrist_trigger,baseline_manual,20,,13.507099399487668,29.667067691285432,55.00000000000001
+wrist_trigger,proposed_auto,20,100.0,80.56736945890704,76.25551858414761,80.0
+wrist_trigger,reference_spotter,20,100.0,76.03448275862068,60.0,60.0
