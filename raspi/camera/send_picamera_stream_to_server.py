@@ -40,9 +40,8 @@ OWW_CHUNK_SIZE = 1280       # 80ms at 16kHz
 OWW_TARGET_RATE = 16000
 OWW_THRESHOLD = 0.5
 OWW_COOLDOWN_SEC = 2.0
-SILENCE_END_SEC = 1.0       # RMS silence duration to end utterance
-MAX_LISTEN_SEC = 10.0       # Hard timeout
-RMS_SPEECH_THRESHOLD = 0.015  # Updated by calibration
+MAX_LISTEN_SEC = 15.0       # Hard safety timeout (desktop should send stop before this)
+PI_LISTEN_PORT = 5051       # Receives /stop from desktop
 DESKTOP_WAKEWORD_URL = f"http://{SERVER_IP}:5050/wakeword"
 DESKTOP_UTTERANCE_URL = f"http://{SERVER_IP}:5050/utterance"
 # Set to onnx model filename (looked up in same dir as this script), or None for built-in
@@ -209,11 +208,12 @@ class UsbMicAudioStreamTrack(AudioStreamTrack):
             print("[INFO] USB Mic capture stopped.")
 
 
-# === Wake Word Detector (runs on Pi with clean mic audio, pi_ear pattern) ===
+# === Wake Word Detector (runs on Pi with clean mic audio) ===
 class WakeWordDetector:
     """
-    Taps into mic callback, downsamples 48k->16k, runs OWW.
-    On wake word: notifies desktop, records with RMS endpointing, sends clean audio.
+    OWW detection on clean mic audio.
+    On wake word: notify desktop, record until desktop sends /stop (or hard timeout).
+    Then send clean recorded audio to desktop for STT.
     """
 
     def __init__(self):
@@ -237,17 +237,32 @@ class WakeWordDetector:
         # State: IDLE / LISTENING
         self.state = "IDLE"
         self.cooldown_until = 0
-        self.last_speech_time = 0
         self.listen_start_time = 0
         self.utter_frames = []
 
-        # Calibration
-        self.calibrated = False
-        self.cal_levels = []
-        self.rms_threshold = RMS_SPEECH_THRESHOLD
+        # Stop signal from desktop (set via HTTP /stop)
+        self.stop_event = threading.Event()
 
-    def _rms(self, x):
-        return float(np.sqrt(np.mean(np.square(x)) + 1e-12))
+        # Start HTTP server to receive /stop from desktop
+        self._start_stop_server()
+
+    def _start_stop_server(self):
+        from http.server import HTTPServer, BaseHTTPRequestHandler
+        detector = self
+
+        class StopHandler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                if self.path == "/stop":
+                    detector.stop_event.set()
+                self.send_response(200)
+                self.end_headers()
+
+            def log_message(self, format, *args):
+                pass
+
+        self._server = HTTPServer(("0.0.0.0", PI_LISTEN_PORT), StopHandler)
+        threading.Thread(target=self._server.serve_forever, daemon=True).start()
+        print(f"[OWW] Listening for /stop on port {PI_LISTEN_PORT}")
 
     def feed_audio(self, audio_f32_48k):
         """Called from the mic callback with 48kHz float32 audio."""
@@ -262,17 +277,6 @@ class WakeWordDetector:
                     break
                 chunk = self.accum[:OWW_CHUNK_SIZE]
                 self.accum = self.accum[OWW_CHUNK_SIZE:]
-
-            # Calibrate noise floor from first 20 chunks
-            if not self.calibrated:
-                self.cal_levels.append(self._rms(chunk))
-                if len(self.cal_levels) >= 20:
-                    avg_noise = np.mean(self.cal_levels)
-                    self.rms_threshold = avg_noise + 0.02
-                    self.calibrated = True
-                    print(f"[OWW] Calibrated. Noise={avg_noise:.4f} Threshold={self.rms_threshold:.4f}")
-                    sys.stdout.flush()
-                continue
 
             chunk_int16 = (np.clip(chunk, -1.0, 1.0) * 32767).astype(np.int16)
             now = time.time()
@@ -291,34 +295,27 @@ class WakeWordDetector:
 
                 for name, score in prediction.items():
                     if score >= OWW_THRESHOLD:
-                        print(f"[OWW] WAKE '{name}' score={score:.2f} -> LISTENING")
+                        print(f"[OWW] WAKE '{name}' score={score:.2f} -> RECORDING")
                         sys.stdout.flush()
                         self.state = "LISTENING"
                         self.utter_frames = []
-                        self.last_speech_time = now
                         self.listen_start_time = now
+                        self.stop_event.clear()
                         if hasattr(self.model, 'reset'):
                             self.model.reset()
                         # Notify desktop: wake word fired
-                        threading.Thread(
-                            target=self._notify, args=(DESKTOP_WAKEWORD_URL,),
-                            kwargs={"json": {"word": str(name), "score": float(score)}},
-                            daemon=True
-                        ).start()
+                        self._post_async(DESKTOP_WAKEWORD_URL,
+                                         json={"word": str(name), "score": float(score)})
                         break
 
             elif self.state == "LISTENING":
                 self.utter_frames.append(chunk)
-                current_rms = self._rms(chunk)
 
-                if current_rms >= self.rms_threshold:
-                    self.last_speech_time = now
-
-                is_silence = (now - self.last_speech_time) >= SILENCE_END_SEC
+                is_stop = self.stop_event.is_set()
                 is_timeout = (now - self.listen_start_time) >= MAX_LISTEN_SEC
 
-                if is_silence or is_timeout:
-                    reason = "silence" if is_silence else "timeout"
+                if is_stop or is_timeout:
+                    reason = "ASD stop" if is_stop else "timeout"
                     duration = now - self.listen_start_time
                     print(f"[OWW] END ({reason}, {duration:.1f}s) -> sending audio")
                     sys.stdout.flush()
@@ -327,26 +324,25 @@ class WakeWordDetector:
                     if self.utter_frames:
                         audio_f32 = np.concatenate(self.utter_frames).astype(np.float32)
                         audio_int16 = (np.clip(audio_f32, -1.0, 1.0) * 32767).astype(np.int16)
-                        threading.Thread(
-                            target=self._notify, args=(DESKTOP_UTTERANCE_URL,),
-                            kwargs={"data": audio_int16.tobytes()},
-                            daemon=True
-                        ).start()
+                        self._post_async(DESKTOP_UTTERANCE_URL, data=audio_int16.tobytes())
 
                     self.utter_frames = []
+                    self.stop_event.clear()
                     self.cooldown_until = now + OWW_COOLDOWN_SEC
                     if hasattr(self.model, 'reset'):
                         self.model.reset()
                     self.state = "IDLE"
 
-    def _notify(self, url, **kwargs):
-        import requests
-        try:
-            requests.post(url, timeout=20, **kwargs)
-            print(f"[OWW] Sent to {url.split('/')[-1]}")
-        except Exception as e:
-            print(f"[OWW] Failed: {e}")
-        sys.stdout.flush()
+    def _post_async(self, url, **kwargs):
+        def _do():
+            import requests
+            try:
+                requests.post(url, timeout=20, **kwargs)
+                print(f"[OWW] Sent -> {url.split('/')[-1]}")
+            except Exception as e:
+                print(f"[OWW] Failed -> {url.split('/')[-1]}: {e}")
+            sys.stdout.flush()
+        threading.Thread(target=_do, daemon=True).start()
 
 
 # === WebRTC Streaming Function ===

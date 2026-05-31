@@ -47,7 +47,8 @@ WHEP_URL = "http://127.0.0.1:8889/cam1/whep"
 STT_URL = "http://127.0.0.1:8000/transcribe"
 ORCHESTRATOR_URL = "http://127.0.0.1:5000/process_text"
 
-WAKEWORD_LISTEN_PORT = 5050  # Receives wake word POSTs from Pi
+WAKEWORD_LISTEN_PORT = 5050  # Receives wake word + utterance POSTs from Pi
+PI_STOP_URL = "http://100.80.70.120:5051/stop"  # Tell Pi to stop recording
 
 PRETRAIN_DIR = os.path.join(os.path.dirname(__file__), '..', 'pretrain_model')
 STUDENT_WEIGHTS = os.path.join(PRETRAIN_DIR, 'SOTA_studen_model', 'holopi_student_best.pt')
@@ -319,71 +320,91 @@ def get_crop(img_gray, x1, y1, x2, y2, size):
 # ==========================================
 class PipelineState(enum.Enum):
     IDLE = "IDLE"
-    LISTENING = "LISTENING"
-    PROCESSING = "PROCESSING"
+    CONFIRMING = "CONFIRMING"   # Wake word fired, waiting for ASD green
+    LISTENING = "LISTENING"     # ASD confirmed, Pi is recording
+    PROCESSING = "PROCESSING"  # Stop sent to Pi, waiting for utterance
 
+
+SILENCE_FRAMES_THRESHOLD = 25  # ~1s at 25fps of ASD red before sending stop
+ASD_CONFIRM_TIMEOUT = 5.0     # Max seconds to wait for ASD green after wake word
 
 class PipelineStateMachine:
     """
-    Wake word + ASD gate.
+    ASD-controlled pipeline.
 
-    Pi handles: wake word detection + RMS recording + sends clean audio.
-    Desktop handles: ASD confirmation (accept/reject).
-
-    Flow:
-      IDLE -> /wakeword -> LISTENING (track if ASD goes green)
-      LISTENING -> /utterance arrives ->
-        ASD was green? -> send to STT -> IDLE
-        ASD never green? -> reject -> IDLE
+    IDLE -> /wakeword -> CONFIRMING (wait for ASD green)
+    CONFIRMING -> ASD green -> LISTENING (Pi is recording)
+    CONFIRMING -> timeout -> /stop to Pi, reject -> IDLE
+    LISTENING -> ASD red ~1s -> /stop to Pi -> PROCESSING (wait for utterance)
+    PROCESSING -> /utterance -> STT -> IDLE
     """
     def __init__(self):
         self.state = PipelineState.IDLE
-        self.pending_ww_time = None
-        self.asd_confirmed = False
+        self.ww_time = None
+        self.consecutive_silence = 0
 
     def on_wake_word(self, word, score, any_speaker_active):
-        """Called when Pi sends wake word signal."""
         if self.state != PipelineState.IDLE:
             return
 
-        self.state = PipelineState.LISTENING
-        self.pending_ww_time = time.time()
-        self.asd_confirmed = any_speaker_active
-        asd_tag = "ASD:YES" if any_speaker_active else "ASD:pending"
-        print(f"[STATE] IDLE -> LISTENING ({asd_tag})")
+        self.ww_time = time.time()
+        self.consecutive_silence = 0
+
+        if any_speaker_active:
+            self.state = PipelineState.LISTENING
+            print(f"[STATE] IDLE -> LISTENING (ASD already green)")
+        else:
+            self.state = PipelineState.CONFIRMING
+            print(f"[STATE] IDLE -> CONFIRMING (waiting for ASD green)")
 
     def on_asd_update(self, any_speaker_active):
-        """Called every frame. Track if ASD ever goes green while Pi records."""
-        if self.state == PipelineState.LISTENING and any_speaker_active:
-            if not self.asd_confirmed:
-                elapsed = time.time() - self.pending_ww_time if self.pending_ww_time else 0
-                print(f"[STATE] ASD confirmed (after {elapsed:.1f}s)")
-            self.asd_confirmed = True
+        if self.state == PipelineState.CONFIRMING:
+            elapsed = time.time() - self.ww_time
+            if any_speaker_active:
+                self.state = PipelineState.LISTENING
+                self.consecutive_silence = 0
+                print(f"[STATE] CONFIRMING -> LISTENING (ASD green after {elapsed:.1f}s)")
+            elif elapsed > ASD_CONFIRM_TIMEOUT:
+                print(f"[STATE] CONFIRMING -> IDLE (ASD never green, sending /stop)")
+                self._send_stop()
+                self._reset()
+
+        elif self.state == PipelineState.LISTENING:
+            if any_speaker_active:
+                self.consecutive_silence = 0
+            else:
+                self.consecutive_silence += 1
+
+            if self.consecutive_silence >= SILENCE_FRAMES_THRESHOLD:
+                print(f"[STATE] LISTENING -> PROCESSING (ASD red {SILENCE_FRAMES_THRESHOLD} frames, sending /stop)")
+                self._send_stop()
+                self.state = PipelineState.PROCESSING
 
     def on_utterance_received(self):
-        """Called when Pi sends captured clean audio."""
-        if self.state != PipelineState.LISTENING:
-            print(f"[STATE] Utterance arrived but state={self.state.value}, ignoring")
-            return False
-
-        if self.asd_confirmed:
-            self.state = PipelineState.PROCESSING
-            print("[STATE] LISTENING -> PROCESSING (ASD confirmed, sending to STT)")
+        if self.state in (PipelineState.PROCESSING, PipelineState.LISTENING):
+            print(f"[STATE] {self.state.value} -> sending to STT")
             return True
         else:
-            elapsed = time.time() - self.pending_ww_time if self.pending_ww_time else 0
-            print(f"[STATE] Utterance rejected (ASD never green in {elapsed:.1f}s)")
-            self._reset()
+            print(f"[STATE] Utterance arrived in {self.state.value}, ignoring")
             return False
 
     def on_processing_complete(self):
         self._reset()
-        print("[STATE] PROCESSING -> IDLE")
+        print("[STATE] -> IDLE")
+
+    def _send_stop(self):
+        def _do():
+            try:
+                requests.post(PI_STOP_URL, timeout=3)
+                print("[STATE] /stop sent to Pi")
+            except Exception as e:
+                print(f"[STATE] /stop failed: {e}")
+        threading.Thread(target=_do, daemon=True).start()
 
     def _reset(self):
         self.state = PipelineState.IDLE
-        self.pending_ww_time = None
-        self.asd_confirmed = False
+        self.ww_time = None
+        self.consecutive_silence = 0
 
 
 # ==========================================
@@ -621,7 +642,7 @@ def main():
             if frame_idx % 50 == 0:
                 rms = np.sqrt(np.mean(raw_audio ** 2) + 1e-12)
                 asd_str = " ".join(f"T{tid}:{'SPK' if p>SENSITIVITY else 'sil'}({p:.2f})" for tid, p in ai_state_cache.items()) or "no-faces"
-                pend = " WW-PEND" if state_machine.pending_ww_time else ""
+                pend = ""
                 print(f"[f{frame_idx:5d}] {state_machine.state.value:10s} | rms={rms:.4f} | {asd_str}{pend}")
 
             # ---- VISUAL CROP BUFFERING ----
@@ -729,6 +750,7 @@ def main():
                 state_text = f"Pipeline: {state_machine.state.value}"
                 state_color = {
                     PipelineState.IDLE: (200, 200, 200),
+                    PipelineState.CONFIRMING: (0, 165, 255),
                     PipelineState.LISTENING: (0, 255, 255),
                     PipelineState.PROCESSING: (255, 0, 255),
                 }[state_machine.state]
