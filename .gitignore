@@ -27,6 +27,7 @@ checkpoints/
 splitted_datasets/
 .sources/
 .archive/
+*.pkl
 
 # 3. react 
 react_avatar/public/animations/
