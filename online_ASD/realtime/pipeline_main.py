@@ -25,8 +25,10 @@ import aiohttp
 from collections import deque
 from scipy.signal import resample_poly
 from aiortc import RTCPeerConnection, RTCSessionDescription
-from openwakeword.model import Model as OWWModel
+# OWW now runs on Pi — desktop receives wake word signal via HTTP
 
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import json
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -45,24 +47,22 @@ WHEP_URL = "http://127.0.0.1:8889/cam1/whep"
 STT_URL = "http://127.0.0.1:8000/transcribe"
 ORCHESTRATOR_URL = "http://127.0.0.1:5000/process_text"
 
-WAKEWORD_MODEL_PATH = os.path.join(os.path.dirname(__file__), "wakeword_models", "hey_holo.onnx")
-WAKEWORD_THRESHOLD = 0.5
-WAKEWORD_COOLDOWN_SEC = 2.0
+WAKEWORD_LISTEN_PORT = 5050  # Receives wake word POSTs from Pi
 
 PRETRAIN_DIR = os.path.join(os.path.dirname(__file__), '..', 'pretrain_model')
 STUDENT_WEIGHTS = os.path.join(PRETRAIN_DIR, 'SOTA_studen_model', 'holopi_student_best.pt')
 
 ACTUAL_FPS = 25.0
-SENSITIVITY = 0.5
+SENSITIVITY = 0.4
 DETECT_INTERVAL = 5
-INFERENCE_INTERVAL = 12
+INFERENCE_INTERVAL = 6
 WINDOW_SIZE = 50
 MAX_SPEAKERS = 5
 AUDIO_SAMPLE_RATE = 16000
 SAMPLES_PER_FRAME = int(AUDIO_SAMPLE_RATE / ACTUAL_FPS)  # 640
 
-SILENCE_FRAMES_THRESHOLD = 30  # ~1.2 seconds at 25fps before declaring speech end
-OWW_CHUNK_SIZE = 1280  # 80ms at 16kHz, what openwakeword expects
+
+
 
 
 # ==========================================
@@ -324,41 +324,134 @@ class PipelineState(enum.Enum):
 
 
 class PipelineStateMachine:
-    def __init__(self, silence_frames=SILENCE_FRAMES_THRESHOLD):
+    """
+    State machine for wake word + ASD gating.
+
+    Flow:
+      IDLE -> /wakeword from Pi -> WAITING_FOR_UTTERANCE
+        (track if ASD goes green at any point while Pi is recording)
+      WAITING_FOR_UTTERANCE -> /utterance from Pi ->
+        if ASD was green at any point -> accept -> STT
+        if ASD was never green -> reject
+    """
+    def __init__(self):
         self.state = PipelineState.IDLE
-        self.silence_frames = silence_frames
-        self.consecutive_silence = 0
-        self.utterance_audio_start = None  # buffer position when LISTENING began
+        self.pending_ww_time = None   # For status display
+        self.asd_confirmed = False    # Was ASD green at any point since wake word?
 
-    def on_wake_word(self, any_speaker_active, audio_buffer_position):
-        """Called when openwakeword fires."""
-        if self.state == PipelineState.IDLE and any_speaker_active:
-            self.state = PipelineState.LISTENING
-            self.utterance_audio_start = audio_buffer_position
-            self.consecutive_silence = 0
-            print("[PIPELINE] Wake word + speaker active -> LISTENING")
-            return True
-        return False
-
-    def on_asd_update(self, any_speaker_active):
-        """Called every frame with the latest ASD state."""
-        if self.state != PipelineState.LISTENING:
+    def on_wake_word(self, word, score, any_speaker_active):
+        """Called when Pi sends wake word signal."""
+        if self.state != PipelineState.IDLE:
             return
 
-        if not any_speaker_active:
-            self.consecutive_silence += 1
-            if self.consecutive_silence >= self.silence_frames:
-                self.state = PipelineState.PROCESSING
-                print("[PIPELINE] Speaker stopped -> PROCESSING")
+        self.state = PipelineState.LISTENING
+        self.pending_ww_time = time.time()
+        self.asd_confirmed = any_speaker_active
+        asd_tag = "ASD:YES" if any_speaker_active else "ASD:pending"
+        print(f"[STATE] IDLE -> LISTENING ({asd_tag}, waiting for utterance from Pi)")
+
+    def on_asd_update(self, any_speaker_active):
+        """Called every frame. Track if ASD ever goes green while waiting."""
+        if self.state == PipelineState.LISTENING and any_speaker_active:
+            if not self.asd_confirmed:
+                elapsed = time.time() - self.pending_ww_time if self.pending_ww_time else 0
+                print(f"[STATE] ASD confirmed (after {elapsed:.1f}s)")
+            self.asd_confirmed = True
+
+    def on_utterance_received(self):
+        """Called when Pi sends captured utterance audio."""
+        if self.state != PipelineState.LISTENING:
+            print(f"[STATE] Utterance received but state={self.state.value}, ignoring")
+            return False
+
+        if self.asd_confirmed:
+            self.state = PipelineState.PROCESSING
+            print("[STATE] LISTENING -> PROCESSING (ASD was green, sending to STT)")
+            return True
         else:
-            self.consecutive_silence = 0
+            elapsed = time.time() - self.pending_ww_time if self.pending_ww_time else 0
+            print(f"[STATE] Utterance rejected (ASD never green in {elapsed:.1f}s)")
+            self._reset()
+            return False
 
     def on_processing_complete(self):
-        """Called after STT submission finishes."""
+        self._reset()
+        print("[STATE] PROCESSING -> IDLE")
+
+    def _reset(self):
         self.state = PipelineState.IDLE
-        self.utterance_audio_start = None
-        self.consecutive_silence = 0
-        print("[PIPELINE] -> IDLE")
+        self.pending_ww_time = None
+        self.asd_confirmed = False
+
+
+# ==========================================
+# PI LISTENER (receives wake word + utterance from Pi)
+# ==========================================
+
+class PiReceiver:
+    """
+    HTTP server receiving two signals from Pi:
+      POST /wakeword  — wake word fired (JSON: word, score)
+      POST /utterance — captured audio after silence endpointing (raw int16 bytes)
+    """
+
+    def __init__(self, port=WAKEWORD_LISTEN_PORT):
+        self.wakeword_event = threading.Event()
+        self.last_word = None
+        self.last_score = 0
+        self.wakeword_time = 0
+
+        self.utterance_audio = None  # numpy int16 array
+        self.utterance_ready = threading.Event()
+
+        receiver = self
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                path = self.path
+                length = int(self.headers.get('Content-Length', 0))
+
+                if path == "/wakeword":
+                    body = json.loads(self.rfile.read(length)) if length else {}
+                    receiver.last_word = body.get("word", "?")
+                    receiver.last_score = body.get("score", 0)
+                    receiver.wakeword_time = time.time()
+                    receiver.wakeword_event.set()
+                    print(f"[PI] Wake word: '{receiver.last_word}' score={receiver.last_score:.2f}")
+
+                elif path == "/utterance":
+                    raw = self.rfile.read(length)
+                    receiver.utterance_audio = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32767.0
+                    receiver.utterance_ready.set()
+                    dur = len(receiver.utterance_audio) / AUDIO_SAMPLE_RATE
+                    print(f"[PI] Utterance received ({dur:.1f}s)")
+
+                self.send_response(200)
+                self.end_headers()
+
+            def log_message(self, format, *args):
+                pass
+
+        self.server = HTTPServer(("0.0.0.0", port), Handler)
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+        print(f"[PI] Listening on port {port} for /wakeword and /utterance")
+
+    def check_wakeword(self):
+        """Non-blocking. Returns (word, score) if triggered, else None."""
+        if self.wakeword_event.is_set():
+            self.wakeword_event.clear()
+            return self.last_word, self.last_score
+        return None
+
+    def check_utterance(self):
+        """Non-blocking. Returns float32 audio array if ready, else None."""
+        if self.utterance_ready.is_set():
+            self.utterance_ready.clear()
+            audio = self.utterance_audio
+            self.utterance_audio = None
+            return audio
+        return None
 
 
 # ==========================================
@@ -407,9 +500,8 @@ def main():
     asd_model.load_state_dict(torch.load(STUDENT_WEIGHTS, map_location=device, weights_only=True))
     asd_model.eval()
 
-    # --- 3. Load wake word model ---
-    print(f"[PIPELINE] Loading wake word model from {WAKEWORD_MODEL_PATH}")
-    oww_model = OWWModel(wakeword_models=[WAKEWORD_MODEL_PATH])
+    # --- 3. Pi receiver (wake word + utterance from Pi) ---
+    pi_receiver = PiReceiver()
 
     # --- 4. Initialize state ---
     state_machine = PipelineStateMachine()
@@ -419,10 +511,6 @@ def main():
     display_buffer = deque(maxlen=WINDOW_SIZE)
     global_audio_buffer = deque(maxlen=WINDOW_SIZE)
     ai_state_cache = {}
-
-    # Wake word audio accumulator (needs OWW_CHUNK_SIZE = 1280 samples per prediction)
-    oww_audio_accum = np.array([], dtype=np.float32)
-    last_wakeword_time = 0
 
     # Background inference thread state
     pending_snapshot = [None]
@@ -492,9 +580,9 @@ def main():
                     new_prob = frame_probs[slot, 1].item()
                     old_prob = ai_state_cache.get(tid, new_prob)
                     if new_prob > old_prob:  # onset: react fast
-                        ai_state_cache[tid] = 0.85 * new_prob + 0.15 * old_prob
-                    else:                    # offset: smooth
-                        ai_state_cache[tid] = 0.6 * new_prob + 0.4 * old_prob
+                        ai_state_cache[tid] = 0.9 * new_prob + 0.1 * old_prob
+                    else:                    # offset: decay slowly
+                        ai_state_cache[tid] = 0.4 * new_prob + 0.6 * old_prob
 
     inference_thread = threading.Thread(target=inference_worker, daemon=True)
     inference_thread.start()
@@ -530,12 +618,12 @@ def main():
             raw_audio = capture.get_audio_chunk(SAMPLES_PER_FRAME)
             global_audio_buffer.append(raw_audio)
 
-            # DEBUG: Print audio level and ASD scores every 50 frames (~2s)
+            # Status line every ~2s
             if frame_idx % 50 == 0:
-                audio_rms = np.sqrt(np.mean(raw_audio ** 2) + 1e-12)
-                buf_total = capture.total_samples_received
-                scores = {tid: f"{p:.2f}" for tid, p in ai_state_cache.items()}
-                print(f"[DEBUG] frame={frame_idx} audio_rms={audio_rms:.6f} buf_samples={buf_total} asd={scores}")
+                rms = np.sqrt(np.mean(raw_audio ** 2) + 1e-12)
+                asd_str = " ".join(f"T{tid}:{'SPK' if p>SENSITIVITY else 'sil'}({p:.2f})" for tid, p in ai_state_cache.items()) or "no-faces"
+                pend = " WW-PEND" if state_machine.pending_ww_time else ""
+                print(f"[f{frame_idx:5d}] {state_machine.state.value:10s} | rms={rms:.4f} | {asd_str}{pend}")
 
             # ---- VISUAL CROP BUFFERING ----
             frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -597,37 +685,25 @@ def main():
                     with snapshot_lock:
                         pending_snapshot[0] = snap
 
-            # ---- WAKE WORD CHECK ----
-            oww_audio_accum = np.concatenate((oww_audio_accum, raw_audio))
-            if len(oww_audio_accum) >= OWW_CHUNK_SIZE:
-                chunk_for_oww = oww_audio_accum[:OWW_CHUNK_SIZE]
-                oww_audio_accum = oww_audio_accum[OWW_CHUNK_SIZE:]
-
-                chunk_int16 = (np.clip(chunk_for_oww, -1.0, 1.0) * 32767).astype(np.int16)
-                prediction = oww_model.predict(chunk_int16)
-
-                now = time.time()
-                if now - last_wakeword_time > WAKEWORD_COOLDOWN_SEC:
-                    for ww_name, score in prediction.items():
-                        if score >= WAKEWORD_THRESHOLD:
-                            print(f"[WAKE] '{ww_name}' detected (score: {score:.2f})")
-                            any_active = any(p > SENSITIVITY for p in ai_state_cache.values())
-                            if state_machine.on_wake_word(any_active, capture.get_current_position()):
-                                last_wakeword_time = now
-                            break
+            # ---- WAKE WORD CHECK (from Pi via HTTP) ----
+            ww_result = pi_receiver.check_wakeword()
+            if ww_result:
+                ww_name, ww_score = ww_result
+                any_active = any(p > SENSITIVITY for p in ai_state_cache.values())
+                state_machine.on_wake_word(ww_name, ww_score, any_active)
 
             # ---- ASD STATE UPDATE ----
             any_speaker_active = any(p > SENSITIVITY for p in ai_state_cache.values())
             state_machine.on_asd_update(any_speaker_active)
 
-            # ---- PROCESSING: SEND TO STT ----
-            if state_machine.state == PipelineState.PROCESSING:
-                utterance_audio = capture.get_audio_since(state_machine.utterance_audio_start)
-                state_machine.on_processing_complete()
-                if len(utterance_audio) > 0:
+            # ---- UTTERANCE FROM PI ----
+            utterance = pi_receiver.check_utterance()
+            if utterance is not None:
+                if state_machine.on_utterance_received():
+                    state_machine.on_processing_complete()
                     threading.Thread(
                         target=submit_to_stt,
-                        args=(utterance_audio, STT_URL, ORCHESTRATOR_URL),
+                        args=(utterance, STT_URL, ORCHESTRATOR_URL),
                         daemon=True
                     ).start()
 

@@ -4,10 +4,12 @@ import sys
 import time
 import asyncio
 import fractions
+import threading
 import aiohttp
 import av
 import numpy as np
 import sounddevice as sd
+from scipy.signal import resample_poly
 from picamera2 import Picamera2
 from aiortc import (
     RTCPeerConnection,
@@ -17,6 +19,7 @@ from aiortc import (
     VideoStreamTrack,
     AudioStreamTrack
 )
+from openwakeword.model import Model as OWWModel
 
 # === Static Configuration ===
 FRAME_WIDTH  = 960
@@ -31,6 +34,19 @@ AUDIO_SAMPLES_PER_FRAME = int(AUDIO_SAMPLE_RATE * AUDIO_FRAME_DURATION)  # 960
 SERVER_IP = "100.100.155.39"  # Server IP address
 SERVER_PORT = "8889"
 MediaMTX_ENDPOINT = "cam1"
+
+# Wake word config (mirrors pi_ear.py)
+OWW_CHUNK_SIZE = 1280       # 80ms at 16kHz
+OWW_TARGET_RATE = 16000
+OWW_THRESHOLD = 0.5
+OWW_COOLDOWN_SEC = 2.0
+SILENCE_END_SEC = 1.0       # Silence duration to end utterance
+MAX_LISTEN_SEC = 10.0       # Hard timeout for recording
+RMS_SPEECH_THRESHOLD = 0.015  # Updated by calibration
+DESKTOP_WAKEWORD_URL = f"http://{SERVER_IP}:5050/wakeword"
+DESKTOP_UTTERANCE_URL = f"http://{SERVER_IP}:5050/utterance"
+# Set to path for custom model, None for built-in (hey_jarvis etc.)
+OWW_MODEL_PATH = None
 
 
 # === USB Mic Detection (from pi_ear.py) ===
@@ -109,6 +125,9 @@ class UsbMicAudioStreamTrack(AudioStreamTrack):
                 self._loop.call_soon_threadsafe(self.queue.put_nowait, audio_data)
             except Exception:
                 pass
+            # Feed wake word detector with clean 48kHz audio
+            if hasattr(self, 'ww_detector') and self.ww_detector:
+                self.ww_detector.feed_audio(audio_data)
 
         try:
             self.stream = sd.InputStream(
@@ -190,6 +209,149 @@ class UsbMicAudioStreamTrack(AudioStreamTrack):
             print("[INFO] USB Mic capture stopped.")
 
 
+# === Wake Word Detector (runs on Pi with clean mic audio, pi_ear pattern) ===
+class WakeWordDetector:
+    """
+    Taps into the mic callback, downsamples 48k->16k, runs OWW.
+    On wake word: records utterance using RMS silence detection (like pi_ear.py),
+    then POSTs wake word signal + captured audio to desktop.
+    """
+
+    def __init__(self):
+        if OWW_MODEL_PATH:
+            self.model = OWWModel(wakeword_models=[OWW_MODEL_PATH])
+        else:
+            self.model = OWWModel()
+        print(f"[OWW] Wake words: {list(self.model.models.keys())}")
+
+        self.accum = np.array([], dtype=np.float32)
+        self.lock = threading.Lock()
+        self.count = 0
+
+        # State machine (IDLE / LISTENING / PROCESSING)
+        self.state = "IDLE"
+        self.cooldown_until = 0
+        self.last_speech_time = 0
+        self.listen_start_time = 0
+        self.utter_frames = []
+
+        # Calibration
+        self.calibrated = False
+        self.cal_levels = []
+        self.rms_threshold = RMS_SPEECH_THRESHOLD
+
+    def _rms(self, x):
+        return float(np.sqrt(np.mean(np.square(x)) + 1e-12))
+
+    def feed_audio(self, audio_f32_48k):
+        """Called from the mic callback with 48kHz float32 audio."""
+        # Downsample 48kHz -> 16kHz
+        audio_16k = resample_poly(audio_f32_48k, 1, 3)
+
+        with self.lock:
+            self.accum = np.concatenate((self.accum, audio_16k))
+
+        # Process all available chunks
+        while True:
+            with self.lock:
+                if len(self.accum) < OWW_CHUNK_SIZE:
+                    break
+                chunk = self.accum[:OWW_CHUNK_SIZE]
+                self.accum = self.accum[OWW_CHUNK_SIZE:]
+
+            # Calibrate noise floor from first 20 chunks (~1.6s)
+            if not self.calibrated:
+                self.cal_levels.append(self._rms(chunk))
+                if len(self.cal_levels) >= 20:
+                    avg_noise = np.mean(self.cal_levels)
+                    self.rms_threshold = avg_noise + 0.02
+                    self.calibrated = True
+                    print(f"[OWW] Calibrated. Noise={avg_noise:.4f} Threshold={self.rms_threshold:.4f}")
+                    sys.stdout.flush()
+                continue
+
+            chunk_int16 = (np.clip(chunk, -1.0, 1.0) * 32767).astype(np.int16)
+            now = time.time()
+
+            if self.state == "IDLE":
+                prediction = self.model.predict(chunk_int16)
+                self.count += 1
+
+                # Log every ~2s
+                if self.count % 25 == 0:
+                    top = max(prediction.items(), key=lambda x: x[1])
+                    print(f"  [OWW #{self.count:4d}] {top[0]}={top[1]:.4f}")
+                    sys.stdout.flush()
+
+                if now < self.cooldown_until:
+                    continue
+
+                for name, score in prediction.items():
+                    if score >= OWW_THRESHOLD:
+                        print(f"[OWW] WAKE '{name}' score={score:.2f} -> LISTENING")
+                        sys.stdout.flush()
+                        self.state = "LISTENING"
+                        self.utter_frames = []
+                        self.last_speech_time = now
+                        self.listen_start_time = now
+                        if hasattr(self.model, 'reset'):
+                            self.model.reset()
+                        # Notify desktop: wake word fired
+                        threading.Thread(
+                            target=self._notify_wakeword, args=(name, score), daemon=True
+                        ).start()
+                        break
+
+            elif self.state == "LISTENING":
+                self.utter_frames.append(chunk)
+                current_rms = self._rms(chunk)
+
+                if current_rms >= self.rms_threshold:
+                    self.last_speech_time = now
+
+                is_silence = (now - self.last_speech_time) >= SILENCE_END_SEC
+                is_timeout = (now - self.listen_start_time) >= MAX_LISTEN_SEC
+
+                if is_silence or is_timeout:
+                    reason = "silence" if is_silence else "timeout"
+                    duration = now - self.listen_start_time
+                    print(f"[OWW] END ({reason}, {duration:.1f}s) -> PROCESSING")
+                    sys.stdout.flush()
+                    self.state = "PROCESSING"
+
+            if self.state == "PROCESSING":
+                # Send captured audio to desktop
+                if self.utter_frames:
+                    audio_data = np.concatenate(self.utter_frames).astype(np.float32)
+                    threading.Thread(
+                        target=self._send_utterance, args=(audio_data,), daemon=True
+                    ).start()
+                # Reset
+                self.utter_frames = []
+                self.cooldown_until = time.time() + OWW_COOLDOWN_SEC
+                if hasattr(self.model, 'reset'):
+                    self.model.reset()
+                self.state = "IDLE"
+
+    def _notify_wakeword(self, name, score):
+        import requests
+        try:
+            requests.post(DESKTOP_WAKEWORD_URL, json={"word": str(name), "score": float(score)}, timeout=3)
+        except Exception as e:
+            print(f"[OWW] Failed to notify desktop wakeword: {e}")
+        sys.stdout.flush()
+
+    def _send_utterance(self, audio_f32):
+        import requests
+        audio_int16 = (np.clip(audio_f32, -1.0, 1.0) * 32767).astype(np.int16)
+        try:
+            requests.post(DESKTOP_UTTERANCE_URL, data=audio_int16.tobytes(), timeout=20)
+            print(f"[OWW] Sent utterance ({len(audio_f32)/OWW_TARGET_RATE:.1f}s)")
+        except Exception as e:
+            print(f"[OWW] Failed to send utterance: {e}")
+        sys.stdout.flush()
+
+
 # === WebRTC Streaming Function ===
 async def publish_stream():
     print("[INFO] Preparing WebRTC connection to MediaMTX...")
@@ -202,6 +364,11 @@ async def publish_stream():
     else:
         print(f"[INFO] Found USB Mic at device index {mic_index}")
         audio_track = UsbMicAudioStreamTrack(mic_index)
+
+    # Start wake word detector (taps into same mic audio)
+    ww_detector = WakeWordDetector()
+    if audio_track:
+        audio_track.ww_detector = ww_detector
 
     config = RTCConfiguration(iceServers=[])
     pc = RTCPeerConnection(configuration=config)
