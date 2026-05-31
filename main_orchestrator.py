@@ -53,10 +53,16 @@ AI_SERVICES = {
     "TTS": {"dir": "TTS/ZipVoice", "url": "http://127.0.0.1:8003/generate_speech"},
     "LIPSYNC": {"dir": "TTS/allosaurus", "venv": "venv", "url": "http://127.0.0.1:8004", "script": "server.py"}, # for lipsync
     "GESTURE": {
-        "dir": "Gesture_System/real-time-HGR-application", 
-        "venv": "..\\venv", 
+        "dir": "Gesture_System/real-time-HGR-application",
+        "venv": "..\\venv",
         "url": "http://127.0.0.1:8889"
-    } 
+    },
+    "ASD_PIPELINE": {
+        "dir": "online_ASD/realtime",
+        "venv": "..\\venv",
+        "script": "pipeline_main.py",
+        "url": None
+    }
 }
 
 # ==========================================

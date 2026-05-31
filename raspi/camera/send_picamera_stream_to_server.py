@@ -1,6 +1,9 @@
 # Import required modules for WebRTC, Pi Camera video capture, audio capture, and HTTP
 import os
+import sys
+import time
 import asyncio
+import fractions
 import aiohttp
 import av
 import numpy as np
@@ -98,6 +101,8 @@ class UsbMicAudioStreamTrack(AudioStreamTrack):
         self._loop = loop
 
         def callback(indata, frames, time_info, status):
+            if status:
+                print(f"[AUDIO] sounddevice status: {status}")
             # indata shape: (frames, channels) - float32
             audio_data = indata[:, 0].copy()
             try:
@@ -105,25 +110,47 @@ class UsbMicAudioStreamTrack(AudioStreamTrack):
             except Exception:
                 pass
 
-        self.stream = sd.InputStream(
-            device=self.device_index,
-            samplerate=AUDIO_SAMPLE_RATE,
-            channels=AUDIO_CHANNELS,
-            blocksize=AUDIO_SAMPLES_PER_FRAME,
-            callback=callback,
-        )
-        self.stream.start()
-        print(f"[INFO] USB Mic capture started at {AUDIO_SAMPLE_RATE}Hz")
+        try:
+            self.stream = sd.InputStream(
+                device=self.device_index,
+                samplerate=AUDIO_SAMPLE_RATE,
+                channels=AUDIO_CHANNELS,
+                blocksize=AUDIO_SAMPLES_PER_FRAME,
+                callback=callback,
+            )
+            self.stream.start()
+            print(f"[INFO] USB Mic capture started at {AUDIO_SAMPLE_RATE}Hz")
+        except Exception as e:
+            print(f"[ERROR] Failed to start USB Mic capture: {e}")
+            self.stream = None
 
     async def recv(self):
-        pts, time_base = await self.next_timestamp()
+        # AudioStreamTrack does NOT have next_timestamp() — only VideoStreamTrack does.
+        # We manage our own timing, matching the base AudioStreamTrack pattern.
+        from aiortc.mediastreams import MediaStreamError
 
-        # Get audio samples from the sounddevice callback queue
-        try:
-            samples = await asyncio.wait_for(self.queue.get(), timeout=1.0)
-        except asyncio.TimeoutError:
-            # Silence if mic stalls
+        if self.readyState != "live":
+            raise MediaStreamError
+
+        if hasattr(self, "_timestamp"):
+            self._timestamp += AUDIO_SAMPLES_PER_FRAME
+            wait = self._start + (self._timestamp / AUDIO_SAMPLE_RATE) - time.time()
+            if wait > 0:
+                await asyncio.sleep(wait)
+        else:
+            self._start = time.time()
+            self._timestamp = 0
+
+        # If stream failed to start, return silence
+        if self.stream is None:
             samples = np.zeros(AUDIO_SAMPLES_PER_FRAME, dtype=np.float32)
+        else:
+            # Get audio samples from the sounddevice callback queue
+            try:
+                samples = await asyncio.wait_for(self.queue.get(), timeout=1.0)
+            except asyncio.TimeoutError:
+                # Silence if mic stalls
+                samples = np.zeros(AUDIO_SAMPLES_PER_FRAME, dtype=np.float32)
 
         # Ensure correct length
         if len(samples) < AUDIO_SAMPLES_PER_FRAME:
@@ -139,12 +166,24 @@ class UsbMicAudioStreamTrack(AudioStreamTrack):
             samples_int16.reshape(1, -1), format="s16", layout="mono"
         )
         audio_frame.sample_rate = AUDIO_SAMPLE_RATE
-        audio_frame.pts = pts
-        audio_frame.time_base = time_base
+        audio_frame.pts = self._timestamp
+        audio_frame.time_base = fractions.Fraction(1, AUDIO_SAMPLE_RATE)
+
+        if not hasattr(self, '_frame_count'):
+            self._frame_count = 0
+        self._frame_count += 1
+        if self._frame_count <= 3 or self._frame_count % 500 == 0:
+            rms = np.sqrt(np.mean(samples ** 2) + 1e-12)
+            print(f"[AUDIO] frame={self._frame_count} rms={rms:.6f} pts={self._timestamp}")
+            sys.stdout.flush()
 
         return audio_frame
 
     def stop(self):
+        import traceback
+        print("[INFO] USB Mic capture stop() called. Stack trace:")
+        traceback.print_stack()
+        sys.stdout.flush()
         if self.stream:
             self.stream.stop()
             self.stream.close()
@@ -174,21 +213,32 @@ async def publish_stream():
     # Attach audio track (if mic available)
     if audio_track:
         pc.addTrack(audio_track)
-        audio_track.start_capture(asyncio.get_event_loop())
+        audio_track.start_capture(asyncio.get_running_loop())
 
     # Event to know when connection is dead
     disconnect_event = asyncio.Event()
 
     @pc.on("connectionstatechange")
     async def on_state_change():
-        print(f"[STATE] pc.connectionState = {pc.connectionState}")
-        if pc.connectionState in ("failed", "disconnected", "closed"):
+        state = pc.connectionState
+        print(f"[STATE] pc.connectionState = {state}")
+        # Only treat "failed" and "closed" as terminal.
+        # "disconnected" is transient — WebRTC may recover from it.
+        if state in ("failed", "closed"):
             disconnect_event.set()
 
     # Create offer
     offer = await pc.createOffer()
     await pc.setLocalDescription(offer)
-    print("[INFO] SDP offer created successfully (video + audio)")
+
+    # Log SDP to verify audio is included
+    sdp_lines = pc.localDescription.sdp.split('\n')
+    audio_lines = [l for l in sdp_lines if 'm=audio' in l]
+    video_lines = [l for l in sdp_lines if 'm=video' in l]
+    print(f"[INFO] SDP offer: {len(video_lines)} video, {len(audio_lines)} audio m-lines")
+    for l in audio_lines:
+        print(f"  [SDP] {l.strip()}")
+    sys.stdout.flush()
 
     whip_url = f"http://{SERVER_IP}:{SERVER_PORT}/{MediaMTX_ENDPOINT}/whip"
     print(f"[INFO] Sending offer to WHIP endpoint: {whip_url}")
@@ -209,21 +259,36 @@ async def publish_stream():
                 return
 
             answer_sdp = await resp.text()
+
+            # Log answer SDP to check if audio was accepted
+            ans_audio = [l for l in answer_sdp.split('\n') if 'm=audio' in l]
+            print(f"[INFO] SDP answer: {len(ans_audio)} audio m-lines")
+            for l in ans_audio:
+                print(f"  [SDP-ANS] {l.strip()}")
+            sys.stdout.flush()
+
             await pc.setRemoteDescription(
                 RTCSessionDescription(sdp=answer_sdp, type="answer")
             )
-            print("[SUCCESS] WebRTC connection established with MediaMTX! (video + audio)")
+            print("[SUCCESS] WebRTC connection established with MediaMTX!")
 
     # Wait until the connection dies
+    print("[INFO] Waiting on disconnect_event...")
+    sys.stdout.flush()
     try:
         await disconnect_event.wait()
-        print("[WARN] Connection ended or failed, cleaning up this attempt...")
+        print(f"[WARN] disconnect_event fired (state={pc.connectionState}), cleaning up...")
+        sys.stdout.flush()
+    except asyncio.CancelledError:
+        print("[WARN] publish_stream was cancelled (likely process terminating)")
+        sys.stdout.flush()
     finally:
         await pc.close()
         video_track.picam2.stop()
         if audio_track:
             audio_track.stop()
         print("[INFO] Stream closed. Camera and mic released.")
+        sys.stdout.flush()
 
 async def main():
     while True:
@@ -237,6 +302,19 @@ async def main():
 
 # === Entry Point ===
 if __name__ == "__main__":
+    # Check Opus codec availability (required for WebRTC audio)
+    try:
+        _codec = av.Codec('libopus', 'w')
+        print(f"[INFO] Opus encoder available: {_codec.name}")
+    except Exception:
+        try:
+            _codec = av.Codec('opus', 'w')
+            print(f"[INFO] Opus encoder available: {_codec.name}")
+        except Exception:
+            print("[WARN] Opus encoder NOT found in PyAV! Audio may not work.")
+            print("[WARN] Try: pip install av --force-reinstall")
+    sys.stdout.flush()
+
     try:
         asyncio.run(main())
     except KeyboardInterrupt:

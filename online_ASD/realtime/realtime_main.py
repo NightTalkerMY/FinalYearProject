@@ -28,7 +28,7 @@ videoName = "iamgay"
 VIDEO_FILE = rf"D:\FYP\MSSG\realtime\test_video\{videoName}\{videoName}.mp4"
 AUDIO_FILE = rf"D:\FYP\MSSG\realtime\test_video\{videoName}\{videoName}.wav"
 PRETRAIN_DIR = "pretrain_model" 
-STUDENT_WEIGHTS = r"D:\FYP\MSSG\realtime\realtime_epoch\holopi_student_best.pt"
+STUDENT_WEIGHTS = rf"{PRETRAIN_DIR}\SOTA_studen_model\holopi_student_best.pt"
 
 # --- FIX 1: DYNAMIC FPS MATH ---
 cap = cv2.VideoCapture(VIDEO_FILE)
@@ -36,7 +36,7 @@ ACTUAL_FPS = cap.get(cv2.CAP_PROP_FPS) or 25.0
 cap.release()
 print(f"Detected exact video FPS: {ACTUAL_FPS:.2f}")
 
-SENSITIVITY = 0.5
+SENSITIVITY = 0.7
 DETECT_INTERVAL = 5    # Tracker interpolates between detections
 INFERENCE_INTERVAL = 6  # Reduced from 12 for faster onset detection
 MIN_FRAMES_FOR_INFERENCE = 15  # Allow partial windows (pad the rest)

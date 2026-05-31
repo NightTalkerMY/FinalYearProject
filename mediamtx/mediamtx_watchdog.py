@@ -8,7 +8,6 @@ import os
 # --- CONFIG ---
 MEDIAMTX_CMD = "mediamtx.exe"
 PI_RESTART_URL = "http://100.80.70.120:8000/restart"
-STARTUP_WINDOW = 10.0
 
 # --- REGEX ---
 SESSION_RE = re.compile(r"\[session ([0-9a-f]+)\]")
@@ -52,20 +51,12 @@ def main():
                 sys.stdout.flush()
                 continue
 
-            if sess_id and LOSS_RE.search(line):
-                start_time = active_sessions.get(sess_id)
-                if start_time:
-                    elapsed = time.time() - start_time
-                    if elapsed <= STARTUP_WINDOW:
-                        print(f"[WATCHDOG_LOG] Early RTP loss on cam1 ({elapsed:.1f}s). Requesting Pi Restart...")
-                        print("[WATCHDOG_STATUS] CAM1_DROPPED")
-                        try:
-                            requests.post(PI_RESTART_URL, timeout=3)
-                        except Exception as e:
-                            print(f"[WATCHDOG_LOG] Failed to contact Pi: {e}")
-                        active_sessions.pop(sess_id, None)
-                    else:
-                        pass # Late loss, ignore
+            # NOTE: RTP loss detection disabled for cam1.
+            # The Pi->MediaMTX link over Tailscale has persistent RTP loss
+            # (~30-70 packets/s) which is normal — video still works fine.
+            # The old restart logic was causing an infinite restart loop.
+            # If the stream truly dies, MediaMTX will close the session
+            # and the Pi's reconnect loop will re-establish it.
 
             # --- LOGIC B: REACT AVATAR (AVATAR) ---
             # Look for: is publishing to path 'avatar', X track(s)

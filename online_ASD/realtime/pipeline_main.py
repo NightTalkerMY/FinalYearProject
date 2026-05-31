@@ -50,7 +50,7 @@ WAKEWORD_THRESHOLD = 0.5
 WAKEWORD_COOLDOWN_SEC = 2.0
 
 PRETRAIN_DIR = os.path.join(os.path.dirname(__file__), '..', 'pretrain_model')
-STUDENT_WEIGHTS = os.path.join(PRETRAIN_DIR, 'holopi_student_best.pt')
+STUDENT_WEIGHTS = os.path.join(PRETRAIN_DIR, 'SOTA_studen_model', 'holopi_student_best.pt')
 
 ACTUAL_FPS = 25.0
 SENSITIVITY = 0.5
@@ -91,7 +91,7 @@ class WhepVideoAudioCapture:
         self.thread = threading.Thread(target=self._run_event_loop, daemon=True)
         self.thread.start()
         print(f"[WHEP] Connecting to {self.url}...")
-        time.sleep(3)
+        time.sleep(5)  # Give WHEP time to connect (with retry)
 
     def get_frame(self):
         """Get the next video frame (non-blocking, returns None if empty)."""
@@ -131,40 +131,52 @@ class WhepVideoAudioCapture:
         loop.run_until_complete(self._consume_stream())
 
     async def _consume_stream(self):
-        self.pc = RTCPeerConnection()
-        self.pc.addTransceiver("video", direction="recvonly")
-        self.pc.addTransceiver("audio", direction="recvonly")
+        max_retries = 10
+        for attempt in range(max_retries):
+            self.pc = RTCPeerConnection()
+            self.pc.addTransceiver("video", direction="recvonly")
+            self.pc.addTransceiver("audio", direction="recvonly")
 
-        @self.pc.on("track")
-        def on_track(track):
-            if track.kind == "video":
-                print("[WHEP] Video track received!")
-                asyncio.ensure_future(self._read_video_track(track))
-            elif track.kind == "audio":
-                print("[WHEP] Audio track received!")
-                asyncio.ensure_future(self._read_audio_track(track))
+            @self.pc.on("track")
+            def on_track(track):
+                if track.kind == "video":
+                    print("[WHEP] Video track received!")
+                    asyncio.ensure_future(self._read_video_track(track))
+                elif track.kind == "audio":
+                    print("[WHEP] Audio track received!")
+                    asyncio.ensure_future(self._read_audio_track(track))
 
-        offer = await self.pc.createOffer()
-        await self.pc.setLocalDescription(offer)
+            offer = await self.pc.createOffer()
+            await self.pc.setLocalDescription(offer)
 
-        async with aiohttp.ClientSession() as session:
             try:
-                async with session.post(
-                    self.url,
-                    data=self.pc.localDescription.sdp,
-                    headers={"Content-Type": "application/sdp"}
-                ) as resp:
-                    if resp.status != 201:
-                        print(f"[WHEP] Error: {resp.status} - {await resp.text()}")
-                        return
-                    answer = await resp.text()
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        self.url,
+                        data=self.pc.localDescription.sdp,
+                        headers={"Content-Type": "application/sdp"}
+                    ) as resp:
+                        if resp.status != 201:
+                            error_text = await resp.text()
+                            print(f"[WHEP] Error: {resp.status} - {error_text} (attempt {attempt+1}/{max_retries})")
+                            await self.pc.close()
+                            await asyncio.sleep(2)
+                            continue
+                        answer = await resp.text()
             except Exception as e:
-                print(f"[WHEP] Connection failed: {e}")
-                return
+                print(f"[WHEP] Connection failed: {e} (attempt {attempt+1}/{max_retries})")
+                await self.pc.close()
+                await asyncio.sleep(2)
+                continue
 
-        await self.pc.setRemoteDescription(
-            RTCSessionDescription(sdp=answer, type="answer")
-        )
+            await self.pc.setRemoteDescription(
+                RTCSessionDescription(sdp=answer, type="answer")
+            )
+            print("[WHEP] Connected successfully!")
+            break
+        else:
+            print("[WHEP] Failed to connect after all retries!")
+            return
 
         while self.running:
             await asyncio.sleep(1)
@@ -186,11 +198,18 @@ class WhepVideoAudioCapture:
                 break
 
     async def _read_audio_track(self, track):
+        frame_count = 0
         while self.running:
             try:
                 frame = await track.recv()
                 # av.AudioFrame -> numpy. Shape is (channels, samples) for planar formats
                 samples = frame.to_ndarray().flatten().astype(np.float32)
+
+                # Debug: log first few audio frames
+                if frame_count < 3:
+                    print(f"[WHEP] Audio frame {frame_count}: {samples.shape}, "
+                          f"rate={frame.sample_rate}, max={np.max(np.abs(samples)):.4f}")
+                frame_count += 1
 
                 # Normalize int16 range to float32 [-1, 1] if needed
                 if np.max(np.abs(samples)) > 2.0:
@@ -209,8 +228,10 @@ class WhepVideoAudioCapture:
                     max_buf = AUDIO_SAMPLE_RATE * 10
                     if len(self.audio_buffer) > max_buf:
                         self.audio_buffer = self.audio_buffer[-max_buf:]
-            except Exception:
+            except Exception as e:
+                print(f"[WHEP] Audio track ended: {e}")
                 break
+        print(f"[WHEP] Audio reader exited after {frame_count} frames")
 
 
 # ==========================================
@@ -508,6 +529,13 @@ def main():
             # ---- RAW AUDIO FOR ASD ----
             raw_audio = capture.get_audio_chunk(SAMPLES_PER_FRAME)
             global_audio_buffer.append(raw_audio)
+
+            # DEBUG: Print audio level and ASD scores every 50 frames (~2s)
+            if frame_idx % 50 == 0:
+                audio_rms = np.sqrt(np.mean(raw_audio ** 2) + 1e-12)
+                buf_total = capture.total_samples_received
+                scores = {tid: f"{p:.2f}" for tid, p in ai_state_cache.items()}
+                print(f"[DEBUG] frame={frame_idx} audio_rms={audio_rms:.6f} buf_samples={buf_total} asd={scores}")
 
             # ---- VISUAL CROP BUFFERING ----
             frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
