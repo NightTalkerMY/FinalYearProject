@@ -1,10 +1,12 @@
 """
 Integrated ASD + Wake Word + STT Pipeline
 ==========================================
-Consumes video+audio from MediaMTX via WHEP, runs Active Speaker Detection,
-listens for a wake word (openwakeword), and submits detected utterances to STT.
+Consumes video+audio from MediaMTX via WHEP and runs Active Speaker Detection.
+Wake word detection runs on the Pi (clean mic audio via openwakeword).
+ASD gates and controls the recording session: confirms a visible speaker (start),
+detects when they stop (stop signal to Pi), then receives clean audio for STT.
 
-Flow: IDLE -> (wake word + speaker active) -> LISTENING -> (speaker stops) -> PROCESSING -> IDLE
+Flow: IDLE -> /wakeword -> CONFIRMING -> (ASD green) -> LISTENING -> (ASD red ~1s) -> /stop -> PROCESSING -> STT -> IDLE
 """
 
 import os
