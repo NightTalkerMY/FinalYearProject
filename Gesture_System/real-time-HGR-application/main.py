@@ -125,6 +125,56 @@ class WebRTCVideoCapture:
             except Exception:
                 pass
 
+# [HAND TRACKER: ROI-based single-hand lock]_________________________
+class HandTracker:
+    """
+    When multiple hands are detected, locks onto one and tracks it
+    across frames using nearest-wrist matching. Rejects if the
+    tracked hand jumps too far (likely switched to a different person).
+    """
+    def __init__(self, max_jump_px=150, min_bbox_area=13000):
+        self.locked_wrist = None        # (x, y) in raw pixel coords (pre-flip)
+        self.max_jump_px = max_jump_px
+        self.min_bbox_area = min_bbox_area  # minimum hand bbox area to lock (0 = tune later)
+        # Debug info (read by main loop for on-screen display)
+        self.debug_bbox_area = 0
+        self.debug_locked = False
+
+    def select(self, hand_data, frame_w, frame_h):
+        """Pick the tracked hand from a list of detected hands.
+        Returns a single hand dict, or None if tracking is lost."""
+        if not hand_data:
+            self.locked_wrist = None
+            return None
+
+        if self.locked_wrist is None:
+            # No lock yet — pick the largest hand (closest to camera)
+            best = max(hand_data, key=lambda h: h["bbox"][2] * h["bbox"][3])
+            area = int(best["bbox"][2] * best["bbox"][3])
+            self.debug_bbox_area = area
+            if area < self.min_bbox_area:
+                self.debug_locked = False
+                return None  # hand too small = too far from camera
+        else:
+            # Match by nearest wrist to previous position
+            prev = np.array(self.locked_wrist)
+            best = min(hand_data, key=lambda h: np.linalg.norm(h["lmCoords_2D"][0][:2] - prev))
+
+            # Sanity check — large jump means we lost our hand
+            wrist = best["lmCoords_2D"][0][:2].astype(float)
+            if np.linalg.norm(wrist - prev) > self.max_jump_px:
+                self.locked_wrist = None
+                return None
+
+        # Update lock
+        wrist = best["lmCoords_2D"][0][:2].astype(float)
+        self.locked_wrist = (wrist[0], wrist[1])
+        self.debug_locked = True
+        return best
+
+    def reset(self):
+        self.locked_wrist = None
+
 # [FUNCTIONS]________________________________________________________
 def _color_fingers():
     global rgb_colors
@@ -158,8 +208,9 @@ def live_stream_hgr(nD):
     cv.setWindowProperty(window_name, cv.WND_PROP_TOPMOST, 1)
     cv.moveWindow(window_name, x=50, y=15)
 
-    detector = HandDetector(detectionCon=0.85, maxHands=1)
+    detector = HandDetector(detectionCon=0.85, maxHands=2)
     gate = BoxGate()
+    tracker = HandTracker(max_jump_px=150)
     capture_count = 0
     pre_buffer = deque(maxlen=6)
 
@@ -184,8 +235,10 @@ def live_stream_hgr(nD):
         img = cv.flip(img, 1)
         state = "NO_HAND"
 
-        if hand_data:
-            hand = hand_data[0]
+        # --- ROI: lock onto one hand, ignore the rest ---
+        hand = tracker.select(hand_data, w, h) if hand_data else None
+
+        if hand:
             lmCoords = hand[f"lmCoords_{nD}"]
             wrist_raw = hand["lmCoords_2D"][0]
             cx, cy = w - int(wrist_raw[0]), int(wrist_raw[1])
@@ -251,21 +304,24 @@ def live_stream_hgr(nD):
             prev_cx, prev_cy = cx, cy
 
         else:
-            # gate.reset()
-            # pre_buffer.clear() 
-            # frozen_pos_2d = None
             # Capture the exit state from the new reset logic
             exit_state = gate.reset()
-            
+
             if exit_state == "FINISHED":
                 capture_count += 1
                 print(f"\n>>> CAPTURE {capture_count} SUCCESS! (Off-screen Exit)")
-                gs_logger() 
-            
+                gs_logger()
+
             # General cleanup for lost hand
+            tracker.reset()
             gs_deque.clear()
-            pre_buffer.clear() 
+            pre_buffer.clear()
             frozen_pos_2d = None
+
+        # --- DEBUG: tracker engagement zone ---
+        dbg_color = (0, 255, 0) if tracker.debug_locked else (0, 0, 255)
+        cv.putText(img, f"BBOX_AREA: {tracker.debug_bbox_area}  MIN: {tracker.min_bbox_area}  LOCK: {tracker.debug_locked}",
+                   (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.6, dbg_color, 2)
 
         cv.imshow(window_name, img)
         key = cv.waitKey(1)
