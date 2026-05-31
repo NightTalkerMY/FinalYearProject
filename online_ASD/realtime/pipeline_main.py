@@ -325,19 +325,21 @@ class PipelineState(enum.Enum):
 
 class PipelineStateMachine:
     """
-    State machine for wake word + ASD gating.
+    Wake word + ASD gate.
+
+    Pi handles: wake word detection + RMS recording + sends clean audio.
+    Desktop handles: ASD confirmation (accept/reject).
 
     Flow:
-      IDLE -> /wakeword from Pi -> WAITING_FOR_UTTERANCE
-        (track if ASD goes green at any point while Pi is recording)
-      WAITING_FOR_UTTERANCE -> /utterance from Pi ->
-        if ASD was green at any point -> accept -> STT
-        if ASD was never green -> reject
+      IDLE -> /wakeword -> LISTENING (track if ASD goes green)
+      LISTENING -> /utterance arrives ->
+        ASD was green? -> send to STT -> IDLE
+        ASD never green? -> reject -> IDLE
     """
     def __init__(self):
         self.state = PipelineState.IDLE
-        self.pending_ww_time = None   # For status display
-        self.asd_confirmed = False    # Was ASD green at any point since wake word?
+        self.pending_ww_time = None
+        self.asd_confirmed = False
 
     def on_wake_word(self, word, score, any_speaker_active):
         """Called when Pi sends wake word signal."""
@@ -348,10 +350,10 @@ class PipelineStateMachine:
         self.pending_ww_time = time.time()
         self.asd_confirmed = any_speaker_active
         asd_tag = "ASD:YES" if any_speaker_active else "ASD:pending"
-        print(f"[STATE] IDLE -> LISTENING ({asd_tag}, waiting for utterance from Pi)")
+        print(f"[STATE] IDLE -> LISTENING ({asd_tag})")
 
     def on_asd_update(self, any_speaker_active):
-        """Called every frame. Track if ASD ever goes green while waiting."""
+        """Called every frame. Track if ASD ever goes green while Pi records."""
         if self.state == PipelineState.LISTENING and any_speaker_active:
             if not self.asd_confirmed:
                 elapsed = time.time() - self.pending_ww_time if self.pending_ww_time else 0
@@ -359,14 +361,14 @@ class PipelineStateMachine:
             self.asd_confirmed = True
 
     def on_utterance_received(self):
-        """Called when Pi sends captured utterance audio."""
+        """Called when Pi sends captured clean audio."""
         if self.state != PipelineState.LISTENING:
-            print(f"[STATE] Utterance received but state={self.state.value}, ignoring")
+            print(f"[STATE] Utterance arrived but state={self.state.value}, ignoring")
             return False
 
         if self.asd_confirmed:
             self.state = PipelineState.PROCESSING
-            print("[STATE] LISTENING -> PROCESSING (ASD was green, sending to STT)")
+            print("[STATE] LISTENING -> PROCESSING (ASD confirmed, sending to STT)")
             return True
         else:
             elapsed = time.time() - self.pending_ww_time if self.pending_ww_time else 0
@@ -385,23 +387,21 @@ class PipelineStateMachine:
 
 
 # ==========================================
-# PI LISTENER (receives wake word + utterance from Pi)
+# PI LISTENER (receives wake word + clean utterance from Pi)
 # ==========================================
-
 class PiReceiver:
     """
-    HTTP server receiving two signals from Pi:
+    HTTP server receiving from Pi:
       POST /wakeword  — wake word fired (JSON: word, score)
-      POST /utterance — captured audio after silence endpointing (raw int16 bytes)
+      POST /utterance — clean recorded audio (raw int16 bytes)
     """
 
     def __init__(self, port=WAKEWORD_LISTEN_PORT):
         self.wakeword_event = threading.Event()
         self.last_word = None
         self.last_score = 0
-        self.wakeword_time = 0
 
-        self.utterance_audio = None  # numpy int16 array
+        self.utterance_audio = None
         self.utterance_ready = threading.Event()
 
         receiver = self
@@ -415,7 +415,6 @@ class PiReceiver:
                     body = json.loads(self.rfile.read(length)) if length else {}
                     receiver.last_word = body.get("word", "?")
                     receiver.last_score = body.get("score", 0)
-                    receiver.wakeword_time = time.time()
                     receiver.wakeword_event.set()
                     print(f"[PI] Wake word: '{receiver.last_word}' score={receiver.last_score:.2f}")
 
@@ -435,7 +434,7 @@ class PiReceiver:
         self.server = HTTPServer(("0.0.0.0", port), Handler)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
-        print(f"[PI] Listening on port {port} for /wakeword and /utterance")
+        print(f"[PI] Listening on port {port}")
 
     def check_wakeword(self):
         """Non-blocking. Returns (word, score) if triggered, else None."""
@@ -445,7 +444,7 @@ class PiReceiver:
         return None
 
     def check_utterance(self):
-        """Non-blocking. Returns float32 audio array if ready, else None."""
+        """Non-blocking. Returns float32 audio if ready, else None."""
         if self.utterance_ready.is_set():
             self.utterance_ready.clear()
             audio = self.utterance_audio
@@ -696,10 +695,12 @@ def main():
             any_speaker_active = any(p > SENSITIVITY for p in ai_state_cache.values())
             state_machine.on_asd_update(any_speaker_active)
 
-            # ---- UTTERANCE FROM PI ----
+            # ---- UTTERANCE FROM PI (clean audio) ----
             utterance = pi_receiver.check_utterance()
             if utterance is not None:
                 if state_machine.on_utterance_received():
+                    dur = len(utterance) / AUDIO_SAMPLE_RATE
+                    print(f"[PIPELINE] Sending {dur:.1f}s clean audio to STT")
                     state_machine.on_processing_complete()
                     threading.Thread(
                         target=submit_to_stt,

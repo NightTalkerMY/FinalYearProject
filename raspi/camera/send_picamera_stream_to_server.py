@@ -35,18 +35,18 @@ SERVER_IP = "100.100.155.39"  # Server IP address
 SERVER_PORT = "8889"
 MediaMTX_ENDPOINT = "cam1"
 
-# Wake word config (mirrors pi_ear.py)
+# Wake word config
 OWW_CHUNK_SIZE = 1280       # 80ms at 16kHz
 OWW_TARGET_RATE = 16000
 OWW_THRESHOLD = 0.5
 OWW_COOLDOWN_SEC = 2.0
-SILENCE_END_SEC = 1.0       # Silence duration to end utterance
-MAX_LISTEN_SEC = 10.0       # Hard timeout for recording
+SILENCE_END_SEC = 1.0       # RMS silence duration to end utterance
+MAX_LISTEN_SEC = 10.0       # Hard timeout
 RMS_SPEECH_THRESHOLD = 0.015  # Updated by calibration
 DESKTOP_WAKEWORD_URL = f"http://{SERVER_IP}:5050/wakeword"
 DESKTOP_UTTERANCE_URL = f"http://{SERVER_IP}:5050/utterance"
-# Set to path for custom model, None for built-in (hey_jarvis etc.)
-OWW_MODEL_PATH = None
+# Set to onnx model filename (looked up in same dir as this script), or None for built-in
+OWW_MODEL_PATH = "hey_holo.onnx"
 
 
 # === USB Mic Detection (from pi_ear.py) ===
@@ -212,14 +212,20 @@ class UsbMicAudioStreamTrack(AudioStreamTrack):
 # === Wake Word Detector (runs on Pi with clean mic audio, pi_ear pattern) ===
 class WakeWordDetector:
     """
-    Taps into the mic callback, downsamples 48k->16k, runs OWW.
-    On wake word: records utterance using RMS silence detection (like pi_ear.py),
-    then POSTs wake word signal + captured audio to desktop.
+    Taps into mic callback, downsamples 48k->16k, runs OWW.
+    On wake word: notifies desktop, records with RMS endpointing, sends clean audio.
     """
 
     def __init__(self):
         if OWW_MODEL_PATH:
-            self.model = OWWModel(wakeword_models=[OWW_MODEL_PATH])
+            model_path = OWW_MODEL_PATH
+            if not os.path.isabs(model_path):
+                model_path = os.path.join(os.path.dirname(__file__), model_path)
+            print(f"[OWW] Loading model: {model_path}")
+            try:
+                self.model = OWWModel(wakeword_models=[model_path])
+            except TypeError:
+                self.model = OWWModel([model_path])
         else:
             self.model = OWWModel()
         print(f"[OWW] Wake words: {list(self.model.models.keys())}")
@@ -228,7 +234,7 @@ class WakeWordDetector:
         self.lock = threading.Lock()
         self.count = 0
 
-        # State machine (IDLE / LISTENING / PROCESSING)
+        # State: IDLE / LISTENING
         self.state = "IDLE"
         self.cooldown_until = 0
         self.last_speech_time = 0
@@ -245,13 +251,11 @@ class WakeWordDetector:
 
     def feed_audio(self, audio_f32_48k):
         """Called from the mic callback with 48kHz float32 audio."""
-        # Downsample 48kHz -> 16kHz
         audio_16k = resample_poly(audio_f32_48k, 1, 3)
 
         with self.lock:
             self.accum = np.concatenate((self.accum, audio_16k))
 
-        # Process all available chunks
         while True:
             with self.lock:
                 if len(self.accum) < OWW_CHUNK_SIZE:
@@ -259,7 +263,7 @@ class WakeWordDetector:
                 chunk = self.accum[:OWW_CHUNK_SIZE]
                 self.accum = self.accum[OWW_CHUNK_SIZE:]
 
-            # Calibrate noise floor from first 20 chunks (~1.6s)
+            # Calibrate noise floor from first 20 chunks
             if not self.calibrated:
                 self.cal_levels.append(self._rms(chunk))
                 if len(self.cal_levels) >= 20:
@@ -277,7 +281,6 @@ class WakeWordDetector:
                 prediction = self.model.predict(chunk_int16)
                 self.count += 1
 
-                # Log every ~2s
                 if self.count % 25 == 0:
                     top = max(prediction.items(), key=lambda x: x[1])
                     print(f"  [OWW #{self.count:4d}] {top[0]}={top[1]:.4f}")
@@ -298,7 +301,9 @@ class WakeWordDetector:
                             self.model.reset()
                         # Notify desktop: wake word fired
                         threading.Thread(
-                            target=self._notify_wakeword, args=(name, score), daemon=True
+                            target=self._notify, args=(DESKTOP_WAKEWORD_URL,),
+                            kwargs={"json": {"word": str(name), "score": float(score)}},
+                            daemon=True
                         ).start()
                         break
 
@@ -315,40 +320,32 @@ class WakeWordDetector:
                 if is_silence or is_timeout:
                     reason = "silence" if is_silence else "timeout"
                     duration = now - self.listen_start_time
-                    print(f"[OWW] END ({reason}, {duration:.1f}s) -> PROCESSING")
+                    print(f"[OWW] END ({reason}, {duration:.1f}s) -> sending audio")
                     sys.stdout.flush()
-                    self.state = "PROCESSING"
 
-            if self.state == "PROCESSING":
-                # Send captured audio to desktop
-                if self.utter_frames:
-                    audio_data = np.concatenate(self.utter_frames).astype(np.float32)
-                    threading.Thread(
-                        target=self._send_utterance, args=(audio_data,), daemon=True
-                    ).start()
-                # Reset
-                self.utter_frames = []
-                self.cooldown_until = time.time() + OWW_COOLDOWN_SEC
-                if hasattr(self.model, 'reset'):
-                    self.model.reset()
-                self.state = "IDLE"
+                    # Send clean audio to desktop
+                    if self.utter_frames:
+                        audio_f32 = np.concatenate(self.utter_frames).astype(np.float32)
+                        audio_int16 = (np.clip(audio_f32, -1.0, 1.0) * 32767).astype(np.int16)
+                        threading.Thread(
+                            target=self._notify, args=(DESKTOP_UTTERANCE_URL,),
+                            kwargs={"data": audio_int16.tobytes()},
+                            daemon=True
+                        ).start()
 
-    def _notify_wakeword(self, name, score):
+                    self.utter_frames = []
+                    self.cooldown_until = now + OWW_COOLDOWN_SEC
+                    if hasattr(self.model, 'reset'):
+                        self.model.reset()
+                    self.state = "IDLE"
+
+    def _notify(self, url, **kwargs):
         import requests
         try:
-            requests.post(DESKTOP_WAKEWORD_URL, json={"word": str(name), "score": float(score)}, timeout=3)
+            requests.post(url, timeout=20, **kwargs)
+            print(f"[OWW] Sent to {url.split('/')[-1]}")
         except Exception as e:
-            print(f"[OWW] Failed to notify desktop wakeword: {e}")
-        sys.stdout.flush()
-
-    def _send_utterance(self, audio_f32):
-        import requests
-        audio_int16 = (np.clip(audio_f32, -1.0, 1.0) * 32767).astype(np.int16)
-        try:
-            requests.post(DESKTOP_UTTERANCE_URL, data=audio_int16.tobytes(), timeout=20)
-            print(f"[OWW] Sent utterance ({len(audio_f32)/OWW_TARGET_RATE:.1f}s)")
-        except Exception as e:
-            print(f"[OWW] Failed to send utterance: {e}")
+            print(f"[OWW] Failed: {e}")
         sys.stdout.flush()
 
 
