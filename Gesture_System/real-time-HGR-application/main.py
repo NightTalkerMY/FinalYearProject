@@ -132,7 +132,7 @@ class HandTracker:
     across frames using nearest-wrist matching. Rejects if the
     tracked hand jumps too far (likely switched to a different person).
     """
-    def __init__(self, max_jump_px=150, min_bbox_area=13000):
+    def __init__(self, max_jump_px=150, min_bbox_area=21000):
         self.locked_wrist = None        # (x, y) in raw pixel coords (pre-flip)
         self.max_jump_px = max_jump_px
         self.min_bbox_area = min_bbox_area  # minimum hand bbox area to lock (0 = tune later)
