@@ -193,7 +193,10 @@ def gs_logger():
     n_skeletons = min(len(gs_deque), gs_length)
     gs = np.array(list(starmap(gs_deque.popleft, repeat((), n_skeletons))))
 
-    np.save(f"{gs_tag}/gs_sequence", gs)
+    tmp_path = gs_tag / "gs_sequence.tmp.npy"
+    final_path = gs_tag / "gs_sequence.npy"
+    np.save(tmp_path, gs)
+    tmp_path.replace(final_path)  # atomic rename
     hgrLogger(f"{len(gs_deque):02} | {gs.shape=}", log=hgr_log)
 
 
