@@ -338,6 +338,7 @@ async def process_voice_command(request: Request):
     try:
         llm_res = requests.post(AI_SERVICES["LLM"]["url"], json={"context": context, "query": user_text}).json()
         response_text = llm_res.get("response", "")
+        print(f"LLM Response: {response_text}")
     except:
         response_text = "I am having trouble thinking."
 
@@ -417,6 +418,7 @@ async def process_text_command(request: Request):
     try:
         llm_res = requests.post(AI_SERVICES["LLM"]["url"], json={"context": context, "query": user_text}).json()
         response_text = llm_res.get("response", "")
+        print(f"LLM Response: {response_text}")
     except:
         response_text = "I am having trouble thinking."
 
