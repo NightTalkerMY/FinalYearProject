@@ -14,11 +14,13 @@ This repository contains the core orchestration and microservices for an interac
 ## 🎥 Product Demonstration
 
 <p align="center">
-  <img src="assets/demo-preview.gif" alt="Holographic AI retail assistant demo (preview at 2x speed)" width="300">
+  <a href="https://raw.githubusercontent.com/NightTalkerMY/FinalYearProject/main/assets/demo.mp4">
+    <img src="assets/demo-preview.gif" alt="Holographic AI retail assistant demo (preview at 2x speed)" width="300">
+  </a>
 </p>
 
 <p align="center">
-  ▶️ <strong><a href="assets/demo.mp4">Watch the full demo with audio</a></strong> (56s, MP4)
+  🔇 <em>Preview above is muted &amp; 2× speed</em> — ▶️ <strong><a href="https://raw.githubusercontent.com/NightTalkerMY/FinalYearProject/main/assets/demo.mp4">watch the full demo with audio</a></strong> (56s, MP4)
 </p>
 
 The user speaks and gestures at the hologram: speech is transcribed, routed through RAG for product knowledge, answered by the LLM, and spoken back by the lip-synced 3D avatar — while hand gestures drive the product carousel and 3D product inspection in real time.
