@@ -48,3 +48,6 @@ experiment_metric/boxgate_metric/*.pkl
 # 5. TTS outputs
 outputs_xtts/
 outputs_zipvoice/
+
+
+#### END OF FYP ####
