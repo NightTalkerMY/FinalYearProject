@@ -21,6 +21,8 @@
 # Interface mirrors BoxGate: process(lmCoords) -> (state, score)
 # ------------------------------------------------------------
 
+from __future__ import annotations
+
 import numpy as np
 from collections import deque
 
