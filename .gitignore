@@ -51,3 +51,7 @@ outputs_zipvoice/
 
 
 #### END OF FYP ####
+
+
+# Ignore MacOS files
+.DS_Store
