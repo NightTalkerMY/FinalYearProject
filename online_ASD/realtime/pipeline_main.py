@@ -45,15 +45,28 @@ from ASD import ASD
 # ==========================================
 # CONFIGURATION
 # ==========================================
-WHEP_URL = "http://127.0.0.1:8889/cam1/whep"
-STT_URL = "http://127.0.0.1:8000/transcribe"
-ORCHESTRATOR_URL = "http://127.0.0.1:5000/process_text"
+WHEP_URL = os.getenv("HOLOPI_CAM1_WHEP_URL", "http://127.0.0.1:8889/cam1/whep")
+STT_URL = os.getenv("HOLOPI_STT_URL", "http://127.0.0.1:8000/transcribe")
+ORCHESTRATOR_URL = os.getenv(
+    "HOLOPI_ASD_ORCHESTRATOR_URL",
+    "http://127.0.0.1:5000/process_text",
+)
 
-WAKEWORD_LISTEN_PORT = 5050  # Receives wake word + utterance POSTs from Pi
-PI_STOP_URL = "http://100.80.70.120:5051/stop"  # Tell Pi to stop recording
+WAKEWORD_LISTEN_PORT = int(os.getenv("HOLOPI_WAKEWORD_LISTEN_PORT", "5050"))
+PI_HOST = os.getenv("HOLOPI_PI_HOST", "100.80.70.120")
+PI_STOP_URL = os.getenv("HOLOPI_PI_STOP_URL", f"http://{PI_HOST}:5051/stop")
 
-PRETRAIN_DIR = os.path.join(os.path.dirname(__file__), '..', 'pretrain_model')
-STUDENT_WEIGHTS = os.path.join(PRETRAIN_DIR, 'SOTA_studen_model', 'holopi_student_best.pt')
+REPOSITORY_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+PRETRAIN_DIR = os.path.join(REPOSITORY_ROOT, 'online_ASD', 'pretrain_model')
+configured_student_weights = os.getenv(
+    "HOLOPI_CATT_STUDENT_WEIGHTS",
+    os.path.join(PRETRAIN_DIR, 'SOTA_studen_model', 'holopi_student_best.pt'),
+)
+STUDENT_WEIGHTS = (
+    configured_student_weights
+    if os.path.isabs(configured_student_weights)
+    else os.path.join(REPOSITORY_ROOT, configured_student_weights)
+)
 
 ACTUAL_FPS = 25.0
 SENSITIVITY = 0.4

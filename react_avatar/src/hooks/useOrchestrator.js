@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'; // Added useCallback
 
-const ORCHESTRATOR_URL = "http://localhost:5000";
+const ORCHESTRATOR_URL = import.meta.env.VITE_ORCHESTRATOR_URL || "http://localhost:5000";
 
 export function useOrchestrator() {
   const [state, setState] = useState({

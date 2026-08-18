@@ -1,3 +1,4 @@
+import os
 import time
 import queue
 import numpy as np
@@ -8,8 +9,8 @@ from collections import deque
 from openwakeword.model import Model
 
 # --- CONFIGURATION ---
-DESKTOP_IP = "100.100.155.39"  
-URL = f"http://{DESKTOP_IP}:5000/process"
+DESKTOP_IP = os.getenv("HOLOPI_BACKEND_HOST", "100.100.155.39")
+URL = os.getenv("HOLOPI_PI_ORCHESTRATOR_URL", f"http://{DESKTOP_IP}:5000/process")
 
 # Audio Engine Config
 NATIVE_RATE = 48000

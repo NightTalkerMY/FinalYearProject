@@ -6,8 +6,12 @@ import sys
 import os
 
 # --- CONFIG ---
-MEDIAMTX_CMD = "mediamtx.exe"
-PI_RESTART_URL = "http://100.80.70.120:8000/restart"
+MEDIAMTX_CMD = os.getenv("HOLOPI_MEDIAMTX_CMD", "mediamtx.exe")
+PI_HOST = os.getenv("HOLOPI_PI_HOST", "100.80.70.120")
+PI_RESTART_URL = os.getenv(
+    "HOLOPI_PI_RESTART_URL",
+    f"http://{PI_HOST}:8000/restart",
+)
 GRACE_PERIOD = 4.0          # Ignore RTP loss in the first 4s (codec negotiation)
 STARTUP_WINDOW = 10.0       # Only check for loss within this window after connect
 

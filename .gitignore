@@ -16,6 +16,9 @@ mediamtx.exe
 __pycache__/
 python/
 python_379/
+.env
+.env.local
+react_avatar/.env.local
 
 ## Ignore the rest ##
 # 1. chatbot 

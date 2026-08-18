@@ -8,6 +8,11 @@ from fastai.vision.all import *
 from datetime import datetime, timedelta
 from _helperFunctions import multiDetailsParser, hgrLogger
 
+ORCHESTRATOR_URL = os.getenv(
+    "HOLOPI_GESTURE_ORCHESTRATOR_URL",
+    "http://127.0.0.1:5000/gesture_command",
+)
+
 # [init.args.deets.defaults]
 class Arguments:
     def __init__(self):
@@ -79,7 +84,7 @@ def main():
                 print(f"🚀 MAPPED TO: {command} -> SENDING...")
                 try:
                     requests.post(
-                        "http://127.0.0.1:5000/gesture_command", 
+                        ORCHESTRATOR_URL,
                         json={"command": command, "confidence": float(confidence)},
                         timeout=0.5
                     )

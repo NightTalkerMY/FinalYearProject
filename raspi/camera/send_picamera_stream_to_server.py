@@ -31,9 +31,9 @@ AUDIO_CHANNELS = 1
 AUDIO_FRAME_DURATION = 0.020  # 20ms per audio frame (WebRTC standard)
 AUDIO_SAMPLES_PER_FRAME = int(AUDIO_SAMPLE_RATE * AUDIO_FRAME_DURATION)  # 960
 
-SERVER_IP = "100.100.155.39"  # Server IP address
-SERVER_PORT = "8889"
-MediaMTX_ENDPOINT = "cam1"
+SERVER_IP = os.getenv("HOLOPI_BACKEND_HOST", "100.100.155.39")
+SERVER_PORT = os.getenv("HOLOPI_MEDIAMTX_PORT", "8889")
+MediaMTX_ENDPOINT = os.getenv("HOLOPI_MEDIAMTX_INPUT_STREAM", "cam1")
 
 # Wake word config
 OWW_CHUNK_SIZE = 1280       # 80ms at 16kHz
@@ -41,11 +41,17 @@ OWW_TARGET_RATE = 16000
 OWW_THRESHOLD = 0.5
 OWW_COOLDOWN_SEC = 2.0
 MAX_LISTEN_SEC = 15.0       # Hard safety timeout (desktop should send stop before this)
-PI_LISTEN_PORT = 5051       # Receives /stop from desktop
-DESKTOP_WAKEWORD_URL = f"http://{SERVER_IP}:5050/wakeword"
-DESKTOP_UTTERANCE_URL = f"http://{SERVER_IP}:5050/utterance"
+PI_LISTEN_PORT = int(os.getenv("HOLOPI_PI_LISTEN_PORT", "5051"))
+DESKTOP_WAKEWORD_URL = os.getenv(
+    "HOLOPI_DESKTOP_WAKEWORD_URL",
+    f"http://{SERVER_IP}:5050/wakeword",
+)
+DESKTOP_UTTERANCE_URL = os.getenv(
+    "HOLOPI_DESKTOP_UTTERANCE_URL",
+    f"http://{SERVER_IP}:5050/utterance",
+)
 # Set to onnx model filename (looked up in same dir as this script), or None for built-in
-OWW_MODEL_PATH = "hey_holo.onnx"
+OWW_MODEL_PATH = os.getenv("HOLOPI_WAKEWORD_MODEL", "hey_holo.onnx") or None
 
 
 # === USB Mic Detection (from pi_ear.py) ===

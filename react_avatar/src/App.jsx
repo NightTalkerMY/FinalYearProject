@@ -2,7 +2,7 @@ import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Canvas } from "@react-three/fiber";
 import { Experience } from "./components/Experience";
 
-const MEDIAMTX_URL = "http://localhost:8889/avatar/whip";
+const MEDIAMTX_URL = import.meta.env.VITE_MEDIAMTX_URL || "http://localhost:8889/avatar/whip";
 
 function App() {
   const canvasRef = useRef();

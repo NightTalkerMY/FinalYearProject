@@ -1,6 +1,7 @@
 # e2eET Skeleton Based HGR Using Data-Level Fusion
 # Dynamic Hand Gestures Classification: WebRTC Receiver (MAIN ENTRY POINT)
 # -----------------------------------------------
+import os
 import sys
 import re
 import json
@@ -29,7 +30,7 @@ from hgr_box_gate_v2 import BoxGate
 
 
 # [CONFIGURATION]____________________________________________________
-SERVER_URL = "http://127.0.0.1:8889/cam1/whep" 
+SERVER_URL = os.getenv("HOLOPI_CAM1_WHEP_URL", "http://127.0.0.1:8889/cam1/whep")
 cfg = json.load(open("./allConfigs.jsonc"))
 
 # [GLOBALS]__________________________________________________________

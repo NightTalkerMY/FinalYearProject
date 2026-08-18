@@ -1,162 +1,176 @@
-# Intelligent Holographic AI for Retail
+# Holographic Pipeline (HoloPi)
+
 ![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
 ![LLM Phi-2](https://img.shields.io/badge/LLM-Microsoft_Phi--2-0078D4?logo=microsoft&logoColor=white)
 ![Vector DB ChromaDB](https://img.shields.io/badge/Vector_DB-ChromaDB-E91E63?logo=databricks&logoColor=white)
-![Vision ResNet](https://img.shields.io/badge/Computer_Vision-ResNet-FF6F00)
 ![STT Whisper](https://img.shields.io/badge/STT-OpenAI_Whisper-412991?logo=openai&logoColor=white)
-![TTS ZipVoice](https://img.shields.io/badge/TTS-ZipVoice-17E29A)
-![ASD](https://img.shields.io/badge/ASD-Teacher--Student_CNN-FF4081)
 ![Frontend React](https://img.shields.io/badge/Avatar-React-61DAFB?logo=react&logoColor=black)
-![Media FFmpeg](https://img.shields.io/badge/Streaming-FFmpeg_%7C_MediaMTX-007808?logo=ffmpeg&logoColor=white)
+![Streaming WebRTC](https://img.shields.io/badge/Streaming-WebRTC_%7C_MediaMTX-007808)
 
-This repository contains the core orchestration and microservices for an interactive, AI-powered holographic retail assistant. The system utilizes a distributed microservice architecture, integrating large language models, retrieval-augmented generation, dynamic gesture control, speech processing, active speaker detection, and a 3D React-based avatar — all coordinated by a central FastAPI orchestrator.
+HoloPi is a distributed edge--cloud system for an interactive holographic retail assistant. A Raspberry Pi publishes camera and microphone media to a Windows backend through MediaMTX. Backend services perform active-speaker detection, speech recognition, retrieval, response generation, speech synthesis, lip synchronization, and gesture recognition. A React scene renders the avatar and product interface, while `main_orchestrator.py` coordinates service state and interaction flow.
 
-## 🎥 Product Demonstration
+This repository contains the implementation and experimental workspaces. It does **not** contain the LaTeX manuscript as another runnable module. The link between manuscript claims and code is recorded in [`docs/reproducibility/`](docs/reproducibility/README.md).
+
+## Demonstration
 
 <p align="center">
   <a href="https://raw.githubusercontent.com/NightTalkerMY/FinalYearProject/main/assets/demo.mp4">
-    <img src="assets/demo-preview.gif" alt="Holographic AI retail assistant demo (preview at 2x speed)" width="300">
+    <img src="assets/demo-preview.gif" alt="HoloPi demonstration preview" width="300">
   </a>
 </p>
 
 <p align="center">
-  🔇 <em>Preview above is muted &amp; 2× speed</em> — ▶️ <strong><a href="https://raw.githubusercontent.com/NightTalkerMY/FinalYearProject/main/assets/demo.mp4">watch the full demo with audio</a></strong> (56s, MP4)
+  The preview is muted and shown at 2x speed. <a href="https://raw.githubusercontent.com/NightTalkerMY/FinalYearProject/main/assets/demo.mp4">Watch the full 56-second demonstration with audio.</a>
 </p>
 
-The user speaks and gestures at the hologram: speech is transcribed, routed through RAG for product knowledge, answered by the LLM, and spoken back by the lip-synced 3D avatar — while hand gestures drive the product carousel and 3D product inspection in real time.
+## Repository Scope
 
-## 🌟 Key Innovations & Contributions
+The repository uses three reproducibility statuses:
 
-While the foundational architecture builds upon established research, this project introduces system-level optimizations to satisfy the latency, accuracy, and responsiveness constraints of a real-time retail deployment:
+- **Live-integrated:** called by the retained end-to-end runtime.
+- **Benchmark-only:** evaluated in an experiment workspace but not called by the live runtime.
+- **Configuration-dependent:** source is retained, but execution requires external assets, hardware, or deployment configuration.
 
-### RAG & LLM Pipeline Enhancements
-* **Length-Aware Reranking:** The cross-encoder reranking stage was optimized by introducing length-aware document arrangement prior to inference. This design minimizes padding inefficiencies, reducing overall inference latency while preserving retrieval quality. Performance was benchmarked against MS MARCO and custom retail datasets, maintaining strong Mean Reciprocal Rank (MRR) and Hit Rate metrics.
-* **Instruction-Tuned Semantic Routing:** Traditional precomputed query matching was replaced with a dynamic, instruction-tuned semantic routing mechanism. Incoming queries are encoded using a task-specific instruction function Φ with an instruction prefix (I_task) and compared directly against raw document embeddings. Evaluation on retail datasets showed measurable improvements in macro recall, F1 score, and precision, enabling more adaptive and context-aware retrieval.
-* **Contextual Follow-Up Tracking:** When the product carousel is active, the ASIN of the product currently in focus is forwarded to the RAG service, so follow-up questions ("how much is *this* one?") are answered in the context of the product the user is actually looking at.
+| Component | Location | Runtime status | Purpose |
+|---|---|---|---|
+| Central orchestration | `main_orchestrator.py` | Live-integrated, configuration-dependent | Starts and coordinates backend services and scene state |
+| Media relay | `mediamtx/` | Live-integrated, external binary required | WHIP/WHEP transport for the `cam1` and `avatar` streams |
+| Raspberry Pi capture | `raspi/camera/` | Live-integrated, Pi hardware required | Publishes 960 x 540 video at 30 fps and 48-kHz mono audio |
+| DART gesture gating | `Gesture_System/real-time-HGR-application/` | Live-integrated, classifier asset required | Segments and classifies intentional gestures |
+| CATT-ASD | `online_ASD/realtime/pipeline_main.py` | Live-integrated | Gates speech processing using causal active-speaker detection |
+| Speech-to-text | `STT/` | Live-integrated | Faster-Whisper transcription |
+| Live retrieval | `RAG/` | Live-integrated | Dense and BM25 retrieval followed by ordinary cross-encoder reranking |
+| Phi-2 service | `Chatbot_Phi2/` | Configuration-dependent | Generates the retail response using a local PEFT adapter |
+| Speech and visemes | `TTS/ZipVoice/`, `TTS/allosaurus/` | Configuration-dependent | Generates speech and lip-sync cues |
+| Avatar scene | `react_avatar/` | Live-integrated, 3D assets required | Renders and republishes the holographic scene |
+| LARA evaluation | `experiment_metric/reranker_metric/eval.ipynb` | Benchmark-only | Evaluates length-aware packing and reciprocal rank anchoring |
+| DART evaluation workspace | `Gesture_System/real-time-HGR-application/metric_code/` | Experiment workspace | Contains evaluation code and a recovered legacy single-session report |
 
-### Dynamic Gesture Control Enhancements
-* **Real-Time Boxgate Logic:** The baseline gesture capture pipeline was re-architected from a manual, keyboard-triggered termination model to a fully automated, continuous inference loop using custom boxgate logic. This enables real-time segmentation without user intervention.
-* **Performance Optimization:** By eliminating manual termination overhead, the system achieves higher gesture segmentation purity and lower latency variance, resulting in smoother interaction and improved perceptual continuity for the holographic avatar.
-* **Gesture Vocabulary:** `swipe_left`, `swipe_right`, `swipe_up`, `swipe_down`, `grab`, and `expand` — mapped to carousel navigation and 3D product inspection.
+### Important LARA Boundary
 
-### Real-Time Active Speaker Detection (`online_ASD/`)
-* **Teacher-Student Distillation:** Seven specialized CNN "teacher" encoders (face, body, and background cues) are distilled into a lightweight `CausalStudentASD` model, enabling real-time speaker detection on edge hardware (Raspberry Pi).
-* **Causal Online Pipeline:** S3FD face detection, IoU-based tracking, and a 50-frame sliding window with causal attention let the system classify each tracked face as speaking or silent live, so the avatar knows who is addressing it. See [`online_ASD/CLAUDE.md`](online_ASD/CLAUDE.md) for full details.
+The live `RAG/DatabaseRouting.py` service performs dense top-50 and BM25 top-50 retrieval, deduplication, ordinary cross-encoder batching, and score sorting. Although its constructor retains a `use_length_sorting` option, the option is not used by the live query path, and reciprocal rank anchoring is not applied. The complete evaluated LARA procedure is therefore **benchmark-only**, not live-integrated.
 
-> 📊 **Detailed Evaluation & Metrics**
-> The benchmarking tools live in [`experiment_metric/`](experiment_metric/): `reranker_metric/` evaluates retrieval quality (MS MARCO + a 100-question retail QnA set) and `boxgate_metric/` evaluates gesture segmentation performance.
+## System Flow
 
-## 🏗️ System Architecture & Microservices
+1. The Raspberry Pi publishes the `cam1` audio/video stream to MediaMTX by WHIP.
+2. DART and CATT-ASD consume `cam1` by WHEP on the backend.
+3. CATT-ASD gates transcription and forwards accepted text to the orchestrator.
+4. The orchestrator calls RAG, Phi-2, ZipVoice, and the viseme service.
+5. React polls the orchestrator for scene state, renders the result, and publishes the `avatar` stream by WHIP.
+6. The edge display consumes the `avatar` stream by WHEP.
 
-The central orchestrator (`main_orchestrator.py`, FastAPI on port **5000**) launches and supervises every component. AI services are started only after the MediaMTX watchdog confirms both the avatar stream and the Pi camera stream are stable, and the full voice pipeline runs **STT → RAG → LLM → TTS → lip sync**.
+WebRTC carries media. Wake-word events, stop signals, service requests, gesture commands, and scene-state polling use HTTP.
 
-Each AI service is an independent microservice with its own virtual environment and `main.py`:
+## Reproducibility Documentation
 
-| Service | Directory | Port | Tech |
-|---------|-----------|------|------|
-| Orchestrator | `main_orchestrator.py` (root) | 5000 | FastAPI |
-| STT | `STT/` | 8000 | OpenAI Whisper |
-| LLM | `Chatbot_Phi2/` | 8001 | Microsoft Phi-2 (fine-tuned) |
-| RAG | `RAG/` | 8002 | ChromaDB + instruction-tuned semantic routing |
-| TTS | `TTS/ZipVoice/` | 8003 | ZipVoice |
-| Lip Sync | `TTS/allosaurus/` | 8004 | Allosaurus viseme server |
-| Gesture | `Gesture_System/real-time-HGR-application/` | 8889 | ResNet hand gesture recognition |
+- [`docs/reproducibility/README.md`](docs/reproducibility/README.md): where to start and how evidence is classified.
+- [`docs/reproducibility/manuscript-traceability.md`](docs/reproducibility/manuscript-traceability.md): section-, figure-, and table-level mapping.
+- [`docs/reproducibility/runtime-and-experiments.md`](docs/reproducibility/runtime-and-experiments.md): entry points and experimental boundaries.
+- [`docs/reproducibility/dependencies.md`](docs/reproducibility/dependencies.md): module-specific environment records and compatibility limits.
+- [`docs/reproducibility/artifact-manifest.csv`](docs/reproducibility/artifact-manifest.csv): required assets and their availability.
+- [`docs/reproducibility/provenance.md`](docs/reproducibility/provenance.md): retained revisions and known historical limits.
 
-Supporting components:
-
-* **`react_avatar/`**: Frontend 3D avatar built with React + Vite. `launch-hologram.js` drives the Puppeteer-based hologram display, streamed via MediaMTX + FFmpeg.
-* **`online_ASD/`**: Real-time active speaker detection subsystem (teacher-student CNN architecture).
-* **`raspi/`**: Raspberry Pi clients — `camera/` streams the Pi camera feed to the server (with its own watchdog), `mic/` handles microphone capture.
-* **`mediamtx/`**: MediaMTX configuration plus `mediamtx_watchdog.py`, which monitors stream health and signals the orchestrator (avatar ready, camera connected/dropped, restart commands).
-* **`experiment_metric/`**: Benchmarking tools for reranker performance and boxgate gesture segmentation.
-
-## 📥 Prerequisites & External Dependencies
-
-Before running the system, several external binaries and large model assets must be downloaded.
-
-> ⚠️ **Windows-only deployment:** the orchestrator's process management (`taskkill`, console creation flags) targets Windows.
-
-### 1. External Binaries
-Download the following tools and place them in the root directory (or respective folder):
-* **FFmpeg:** Required for audio/video processing. Download from https://github.com/BtbN/FFmpeg-Builds/releases and find latest assets named `ffmpeg-master-latest-win64-gpl-shared.zip`. Then extract to the root `ffmpeg/` directory.
-* **Rhubarb Lip Sync:** Required for avatar lip-sync generation. Download from https://github.com/DanielSWolf/rhubarb-lip-sync/releases/tag/v1.14.0 and find the latest assets named `Rhubarb-Lip-Sync-1.14.0-Windows.zip`. Then extract to the root `rhubarb/` directory.
-* **MediaMTX:** Required for media streaming. Download the binary from https://github.com/bluenviron/mediamtx/releases/tag/v1.16.1 and find the latest assets named `mediamtx_v1.16.1_windows_amd64.zip`. Then place it inside the `mediamtx/` directory alongside the configuration files.
-
-### 2. Hugging Face Assets (Models, Datasets & 3D Files)
-Due to file size limits, datasets, fine-tuned models, and heavy 3D assets are hosted externally on Hugging Face: **[INSERT_HUGGINGFACE_PROFILE_LINK]**
-
-Please download and place the following assets into their respective directories:
-* **`Chatbot_Phi2/`**: Download the specific datasets and model weights.
-* **`Gesture_System/`**: Download the ResNet training datasets and inference models.
-* **`react_avatar/`**: Download the `public/` directory containing the rendered 3D avatar files and place it inside the frontend folder.
-* **`online_ASD/`**: Download the pretrained teacher checkpoints and distilled student weights into `pretrain_model/`.
-
-## ⚙️ Installation & Setup
-
-Because this project uses a microservice architecture, **each Python directory requires its own separate virtual environment**.
-
-### Step 1: Setup Python Microservices
-For each of the following directories (`Chatbot_Phi2`, `Gesture_System`, `RAG`, `STT`, `TTS`, `online_ASD`), navigate into the folder, create a virtual environment, and install its specific dependencies:
+Run the source and asset checker before attempting setup:
 
 ```bash
-cd [Directory_Name]
-python -m venv venv
-
-# Activate the venv (Windows):
-venv\Scripts\activate
-# OR Activate the venv (Mac/Linux):
-source venv/bin/activate
-
-pip install -r requirements.txt
-deactivate
-cd ..
+python scripts/check_setup.py
+python scripts/check_setup.py --profile full --strict
 ```
 
-### Step 2: Setup the React Avatar
+The first command checks retained source only. The second additionally checks the external assets required by the backend and Raspberry Pi. It is expected to report missing files on a fresh clone.
 
-Navigate to the frontend directory and install the Node packages:
+## Supported Deployment Shape
+
+The retained prototype was operated with:
+
+- a Windows backend with an NVIDIA RTX 4080 SUPER;
+- separate Python environments for modules with incompatible dependency sets;
+- a Raspberry Pi camera publisher with a USB microphone;
+- MediaMTX for bidirectional WebRTC relay;
+- a browser-based edge display for the returned avatar stream.
+
+The repository is not currently a one-command reproduction of the physical prototype. External model files, avatar/product assets, a custom wake-word model, and deployment-specific network values are required. Exact camera and microphone product models were not recorded.
+
+## Configuration
+
+Runtime endpoints and deployment paths can be overridden with environment variables. See [`.env.example`](.env.example) for the complete reference. The Python programs read values from the process environment; they do not automatically load this example file.
+
+The React application uses Vite variables. Copy `react_avatar/.env.example` to `react_avatar/.env.local` and edit it for the deployment.
+
+Defaults preserve the retained deployment topology wherever practical. In particular, local backend services default to `127.0.0.1`, while Raspberry Pi addresses must be set for the current network.
+
+## Installation
+
+Do not combine all requirements into one Python environment. The modules were retained from different development environments and include incompatible PyTorch and package versions.
+
+Create separate environments for at least:
+
+- the root orchestrator;
+- `STT/`;
+- `Chatbot_Phi2/`;
+- `RAG/`;
+- `TTS/ZipVoice/`;
+- `TTS/allosaurus/`;
+- `Gesture_System/`;
+- `online_ASD/`;
+- `experiment_metric/` when rerunning benchmarks.
+
+Requirement filenames are not yet uniform. Use the file present in each directory, such as `requirements.txt`, `requirements_STT.txt`, or `requirements_TTS.txt`. Some retained requirement files are full environment exports rather than minimal lock files; see the reproducibility documentation before installing them.
+
+Install the React dependencies separately:
 
 ```bash
 cd react_avatar
 npm install
-cd ..
 ```
 
-### Step 3: Setup the Main Orchestrator
+## External Assets
 
-Finally, setup the root environment that ties everything together:
+The setup checker and artifact manifest are the authoritative inventory. Major external requirements include:
 
-```bash
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
+- the MediaMTX Windows binary;
+- the Phi-2 PEFT adapter under `Chatbot_Phi2/models/`;
+- DART FastAI classifier files under `Gesture_System/real-time-HGR-application/.sources/`;
+- React avatar, animation, and product assets under `react_avatar/public/`;
+- the Raspberry Pi `hey_holo.onnx` wake-word model;
+- locally cached ZipVoice and vocoder weights;
+- the Faster-Whisper `large-v3` model, downloaded or cached by its library.
+
+CATT-ASD student and teacher weights and the RAG database are retained in Git. Large-file hosting has not been consolidated, so the previous README placeholder for a Hugging Face profile has been removed rather than presented as a valid download source.
+
+## Running the Retained Prototype
+
+On Windows, after installing the environments and assets and exporting the deployment variables:
+
+```bat
+main.bat
 ```
 
-## 🚀 Running the System
+The batch launcher resolves the repository directory dynamically. Alternative launchers are:
 
-The entire microservice architecture is fully automated through the central orchestrator. You do not need to manually start each individual component — the orchestrator launches the MediaMTX watchdog, the React frontend, and every AI microservice, gating AI startup on stream stability to avoid wasting GPU resources.
+| Launcher | Purpose |
+|---|---|
+| `main.bat` | Full retained system |
+| `no_gs.bat` | Keyboard gesture substitute |
+| `no_mic.bat` | Text-input substitute |
 
-To launch the complete Intelligent Holographic AI system:
-
-1. Open your terminal in the root directory.
-2. Ensure your root virtual environment is activated.
-3. Run the orchestrator:
+The central entry point remains:
 
 ```bash
 python main_orchestrator.py
 ```
 
-Or use one of the provided batch launchers:
+The orchestrator is Windows-specific because it uses Windows process-management commands and console creation flags. The Raspberry Pi publisher is launched separately on the Pi.
 
-| Launcher | Purpose |
-|----------|---------|
-| `main.bat` | Full system |
-| `no_gs.bat` | No gesture hardware — substitutes `dummy_gesture_control.py` |
-| `no_mic.bat` | No microphone — substitutes `dummy_no_mic.py` for text-only input |
+## Experimental Evidence Boundaries
 
-## 📚 Acknowledgements & References
+- **LARA:** benchmark code and a saved notebook execution are retained. The exact console output for the single run transcribed in the manuscript was not retained, so small timing differences are expected on re-execution.
+- **DART:** the complete three-participant raw trial dataset behind the manuscript tables is unavailable. CSVs currently present in `metric_code/reports/` belong to an independently recovered single-session backup and do not reproduce the manuscript aggregates.
+- **CATT-ASD:** the live student implementation and weights are retained here. The exact training and comprehensive evaluation programs are retained in the separate MSSG repository identified in the provenance document. The LR-ASD streaming adapter and exact output are unavailable.
+- **Complete HoloPi system:** the repository preserves integration logic but no synchronized capture-to-render benchmark or complete-system resource trace.
 
-This project builds upon and significantly modifies concepts from the following academic research:
+No missing experimental observations should be reconstructed or inferred from the manuscript tables.
 
-* **RAG & LLM Architecture:** The foundational retrieval-augmented generation structure was inspired by *TeleOracle: Fine-Tuned Retrieval-Augmented Generation With Long-Context Support for Networks* (Alabbasi et al., IEEE Internet of Things Journal, 2025). In this repository, the architecture has been uniquely adapted and improved to support real-time retail microservices using Microsoft Phi-2 and ChromaDB.
-* **Dynamic Gesture System:** The core vision methodology is based on *Skeleton-Based Real-Time Hand Gesture Recognition Using Data Fusion and Ensemble Multi-Stream CNN Architecture* (Habib, Yusuf, & Moustafa, MDPI Technologies, 2025). The system has been modified and fine-tuned for specialized, real-time interactive avatar control using ResNet.
+## Acknowledgements
+
+The retrieval architecture was informed by *TeleOracle: Fine-Tuned Retrieval-Augmented Generation With Long-Context Support for Networks*. The gesture-recognition foundation was adapted from *Skeleton-Based Real-Time Hand Gesture Recognition Using Data Fusion and Ensemble Multi-Stream CNN Architecture*. The manuscript and repository documentation distinguish these foundations from HoloPi's evaluated modifications.

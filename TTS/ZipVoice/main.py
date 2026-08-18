@@ -56,6 +56,7 @@
 # if __name__ == "__main__":
 #     uvicorn.run(app, host="127.0.0.1", port=8003)
 
+import os
 import uvicorn
 import json
 import httpx
@@ -73,7 +74,10 @@ print("[TTS] Loading ZipVoice Distill Model to RTX 4080 Super VRAM...")
 tts_engine = ZipVoiceEngine(prompt_wav=SHORT_WAV, prompt_text=PROMPT_TEXT)
 
 # The URL of your new Allosaurus microservice
-ALLOSAURUS_URL = "http://127.0.0.1:8004/generate_visemes"
+ALLOSAURUS_URL = os.getenv(
+    "HOLOPI_ALLOSAURUS_URL",
+    "http://127.0.0.1:8004/generate_visemes",
+)
 
 @app.post("/generate_speech")
 async def generate_speech(request: Request):

@@ -1,10 +1,11 @@
 from PyQt5.QtCore import QUrl, Qt, QTimer
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineProfile, QWebEnginePage, QWebEngineSettings
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout
+import os
 import sys
 
 RETRY_INTERVAL_MS = 5000  # retry every 5 seconds
-AVATAR_URL = "http://192.168.0.171:5173/"
+AVATAR_URL = os.getenv("HOLOPI_AVATAR_URL", "http://192.168.0.171:5173/")
 
 class AvatarApp:
     def __init__(self):

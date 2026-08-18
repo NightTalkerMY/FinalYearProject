@@ -17,14 +17,27 @@ from pathlib import Path
 # 1. Define the Project Root (Where this script is running)
 PROJECT_ROOT = Path(__file__).parent.resolve()
 
-# 2. Define expected paths
-MEDIAMTX_DIR = Path(r"D:\FinalYearProject\mediamtx")
-WATCHDOG_PYTHON = MEDIAMTX_DIR / "venv" / "Scripts" / "python.exe"
+# 2. Define expected paths. Relative environment values resolve from the repo.
+def configured_path(variable, default):
+    value = Path(os.getenv(variable, str(default))).expanduser()
+    return value.resolve() if value.is_absolute() else (PROJECT_ROOT / value).resolve()
+
+
+MEDIAMTX_DIR = configured_path("HOLOPI_MEDIAMTX_DIR", "mediamtx")
+WATCHDOG_PYTHON = configured_path(
+    "HOLOPI_WATCHDOG_PYTHON",
+    MEDIAMTX_DIR / "venv" / "Scripts" / "python.exe",
+)
 WATCHDOG_SCRIPT = "mediamtx_watchdog.py"
 
 # 3. Auto-Detect React/Node Directory
 # Prioritize 'react_avatar', fallback to 'frontend'
-if (PROJECT_ROOT / "react_avatar").is_dir():
+configured_react_dir = os.getenv("HOLOPI_REACT_DIR")
+if configured_react_dir:
+    REACT_DIR = configured_path("HOLOPI_REACT_DIR", "react_avatar")
+    NODE_SCRIPT = configured_path("HOLOPI_NODE_SCRIPT", REACT_DIR / "launch-hologram.js")
+    print(f"Using configured React directory: {REACT_DIR}")
+elif (PROJECT_ROOT / "react_avatar").is_dir():
     REACT_DIR = PROJECT_ROOT / "react_avatar"
     NODE_SCRIPT = REACT_DIR / "launch-hologram.js" # User specified hyphen
     print(f"Detected 'react_avatar' directory. Using: {REACT_DIR}")
@@ -37,6 +50,9 @@ else:
     NODE_SCRIPT = PROJECT_ROOT / "launch_hologram.js"
     print(f"frontend' directory not found. Using Root: {REACT_DIR}")
 
+if os.getenv("HOLOPI_NODE_SCRIPT") and not configured_react_dir:
+    NODE_SCRIPT = configured_path("HOLOPI_NODE_SCRIPT", NODE_SCRIPT)
+
 PATHS = {
     "MEDIAMTX_DIR": str(MEDIAMTX_DIR),
     "WATCHDOG_PYTHON": str(WATCHDOG_PYTHON),
@@ -47,15 +63,15 @@ PATHS = {
 
 # --- AI SERVICES (Gesture Included) ---
 AI_SERVICES = {
-    "STT": {"dir": "STT", "url": "http://127.0.0.1:8000/transcribe"},
-    "LLM": {"dir": "Chatbot_Phi2", "url": "http://127.0.0.1:8001/chat"},
-    "RAG": {"dir": "RAG", "url": "http://127.0.0.1:8002/get_context"},
-    "TTS": {"dir": "TTS/ZipVoice", "url": "http://127.0.0.1:8003/generate_speech"},
-    "LIPSYNC": {"dir": "TTS/allosaurus", "venv": "venv", "url": "http://127.0.0.1:8004", "script": "server.py"}, # for lipsync
+    "STT": {"dir": "STT", "url": os.getenv("HOLOPI_STT_URL", "http://127.0.0.1:8000/transcribe")},
+    "LLM": {"dir": "Chatbot_Phi2", "url": os.getenv("HOLOPI_LLM_URL", "http://127.0.0.1:8001/chat")},
+    "RAG": {"dir": "RAG", "url": os.getenv("HOLOPI_RAG_URL", "http://127.0.0.1:8002/get_context")},
+    "TTS": {"dir": "TTS/ZipVoice", "url": os.getenv("HOLOPI_TTS_URL", "http://127.0.0.1:8003/generate_speech")},
+    "LIPSYNC": {"dir": "TTS/allosaurus", "venv": "venv", "url": os.getenv("HOLOPI_LIPSYNC_URL", "http://127.0.0.1:8004"), "script": "server.py"}, # for lipsync
     "GESTURE": {
         "dir": "Gesture_System/real-time-HGR-application",
         "venv": "..\\venv",
-        "url": "http://127.0.0.1:8889"
+        "url": os.getenv("HOLOPI_MEDIAMTX_BASE_URL", "http://127.0.0.1:8889")
     },
     "ASD_PIPELINE": {
         "dir": "online_ASD/realtime",
@@ -78,10 +94,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# TTS_OUTPUT_DIR = Path("./TTS/outputs_xtts").resolve()
-TTS_OUTPUT_DIR = Path("./TTS/ZipVoice/outputs_zipvoice").resolve()
+# TTS_OUTPUT_DIR = PROJECT_ROOT / "TTS" / "outputs_xtts"
+TTS_OUTPUT_DIR = configured_path("HOLOPI_TTS_OUTPUT_DIR", "TTS/ZipVoice/outputs_zipvoice")
 TTS_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/audio", StaticFiles(directory=TTS_OUTPUT_DIR), name="audio")
+
+PUBLIC_AUDIO_BASE_URL = os.getenv(
+    "HOLOPI_PUBLIC_AUDIO_BASE_URL",
+    "http://localhost:5000/audio",
+).rstrip("/")
+ORCHESTRATOR_HOST = os.getenv("HOLOPI_ORCHESTRATOR_HOST", "0.0.0.0")
+ORCHESTRATOR_PORT = int(os.getenv("HOLOPI_ORCHESTRATOR_PORT", "5000"))
 
 # Global State
 SYSTEM_STATE = {
@@ -349,7 +372,7 @@ async def process_voice_command(request: Request):
         filename = tts_res.get("filename")
         
         if filename:
-            base = "http://localhost:5000/audio"
+            base = PUBLIC_AUDIO_BASE_URL
             
             # --- FIXED GESTURE LOGIC ---
             gesture = "talk"
@@ -427,7 +450,7 @@ async def process_text_command(request: Request):
     try:
         tts_res = requests.post(AI_SERVICES["TTS"]["url"], json={"text": response_text}).json()
         filename = tts_res.get("filename")
-        base = "http://localhost:5000/audio"
+        base = PUBLIC_AUDIO_BASE_URL
         
         # --- FIXED GESTURE LOGIC (Text Mode) ---
         gesture = "talk"
@@ -479,7 +502,7 @@ def generate_goodbye():
         tts_res = requests.post(AI_SERVICES["TTS"]["url"], json={"text": "I hope you liked those. Let me know if you need anything else!"}).json()
         filename = tts_res.get("filename")
         ts = int(time.time())
-        base = "http://localhost:5000/audio"
+        base = PUBLIC_AUDIO_BASE_URL
         
         SYSTEM_STATE.update({
             "status": "SPEAKING",
@@ -540,7 +563,7 @@ if __name__ == "__main__":
     # 4. Start API Server
     print("Starting API Server...")
     try:
-        uvicorn.run(app, host="0.0.0.0", port=5000, log_level="warning")
+        uvicorn.run(app, host=ORCHESTRATOR_HOST, port=ORCHESTRATOR_PORT, log_level="warning")
     except KeyboardInterrupt:
         print("\nSHUTTING DOWN...")
         kill_process_tree(PROCS["watchdog"])

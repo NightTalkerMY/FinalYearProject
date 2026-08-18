@@ -1,7 +1,11 @@
+import os
 import requests
 
 # The new endpoint we just created
-URL = "http://127.0.0.1:5000/process_text"
+URL = os.getenv(
+    "HOLOPI_ASD_ORCHESTRATOR_URL",
+    "http://127.0.0.1:5000/process_text",
+)
 
 print("SILENT MODE ACTIVATED")
 print("Type your command and press ENTER. (Type 'exit' to quit)")

@@ -42,13 +42,26 @@
 import puppeteer from 'puppeteer';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 (async () => {
   console.log("Launching Headless Hologram Engine with GPU Force...");
 
-  // Put all Chromium profile/cache data on SSD
-  const userDataDir = 'D:/FinalYearProject/puppeteer-data';
-  const diskCacheDir = 'D:/FinalYearProject/puppeteer-cache';
+  const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+  const projectRoot = path.resolve(scriptDir, '..');
+  const resolveConfiguredPath = (value, fallbackName) => {
+    if (!value) return path.join(projectRoot, fallbackName);
+    return path.isAbsolute(value) ? value : path.resolve(projectRoot, value);
+  };
+  const userDataDir = resolveConfiguredPath(
+    process.env.HOLOPI_PUPPETEER_DATA_DIR,
+    'puppeteer-data'
+  );
+  const diskCacheDir = resolveConfiguredPath(
+    process.env.HOLOPI_PUPPETEER_CACHE_DIR,
+    'puppeteer-cache'
+  );
+  const reactUrl = process.env.HOLOPI_REACT_URL || 'http://localhost:5173';
 
   fs.mkdirSync(userDataDir, { recursive: true });
   fs.mkdirSync(diskCacheDir, { recursive: true });
@@ -95,7 +108,7 @@ import path from 'path';
 
   page.on('pageerror', err => console.error('BROWSER ERROR:', err));
 
-  await page.goto('http://localhost:5173', {
+  await page.goto(reactUrl, {
     waitUntil: 'networkidle2'
   });
 

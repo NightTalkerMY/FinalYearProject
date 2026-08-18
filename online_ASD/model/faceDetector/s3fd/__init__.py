@@ -2,15 +2,32 @@ import time, os, sys, subprocess
 import numpy as np
 import cv2
 import torch
+from pathlib import Path
 from torchvision import transforms
 from .nets import S3FDNet
 from .box_utils import nms_
 
-PATH_WEIGHT = r"D:\FYP\MSSG\model\faceDetector\s3fd\sfd_face.pth"
-if os.path.isfile(PATH_WEIGHT) == False:
+REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+LOCAL_WEIGHT = Path(__file__).with_name("sfd_face.pth").resolve()
+LEGACY_FYP_WEIGHT = Path(r"D:\FYP\MSSG\model\faceDetector\s3fd\sfd_face.pth")
+configured_weight_value = os.getenv("HOLOPI_S3FD_WEIGHTS")
+
+if configured_weight_value:
+    configured_weight = Path(configured_weight_value).expanduser()
+    PATH_WEIGHT = (
+        configured_weight.resolve()
+        if configured_weight.is_absolute()
+        else (REPOSITORY_ROOT / configured_weight).resolve()
+    )
+elif LEGACY_FYP_WEIGHT.is_file():
+    PATH_WEIGHT = LEGACY_FYP_WEIGHT
+else:
+    PATH_WEIGHT = LOCAL_WEIGHT
+
+if not PATH_WEIGHT.is_file():
+    PATH_WEIGHT.parent.mkdir(parents=True, exist_ok=True)
     Link = "1KafnHz7ccT-3IyddBsL5yi2xGtxAKypt"
-    cmd = "gdown --id %s -O %s"%(Link, PATH_WEIGHT)
-    subprocess.call(cmd, shell=True, stdout=None)
+    subprocess.call(["gdown", "--id", Link, "-O", str(PATH_WEIGHT)], stdout=None)
 img_mean = np.array([104., 117., 123.])[:, np.newaxis, np.newaxis].astype('float32')
 
 
@@ -23,8 +40,7 @@ class S3FD():
 
         # print('[S3FD] loading with', self.device)
         self.net = S3FDNet(device=self.device).to(self.device)
-        PATH = os.path.join(os.getcwd(), PATH_WEIGHT)
-        state_dict = torch.load(PATH, map_location=self.device, weights_only=True)
+        state_dict = torch.load(PATH_WEIGHT, map_location=self.device, weights_only=True)
         self.net.load_state_dict(state_dict)
         self.net.eval()
         # print('[S3FD] finished loading (%.4f sec)' % (time.time() - tstamp))

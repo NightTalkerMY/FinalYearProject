@@ -1,5 +1,5 @@
 @echo off
-cd /d D:\FinalYearProject
+cd /d "%~dp0"
 
 call venv\Scripts\activate
 

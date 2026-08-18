@@ -1,0 +1,27 @@
+artifact,expected_location,git_status,required_for,acquisition_or_source,notes
+MediaMTX Windows binary,mediamtx/mediamtx.exe,external,integrated runtime,Download a compatible MediaMTX release,Configuration is retained at mediamtx/mediamtx.yml
+MediaMTX watchdog environment,mediamtx/venv/,external,integrated runtime,Create from mediamtx/requirements.txt,Override interpreter with HOLOPI_WATCHDOG_PYTHON
+Phi-2 base model,Hugging Face cache,external,Phi-2 service,microsoft/phi-2,Downloaded by Transformers when network access is available
+Phi-2 PEFT adapter,Chatbot_Phi2/models/phi2_retail_native_bf16_38f4a5,external,Phi-2 service,Original local training output unavailable from Git,Required by Chatbot_Phi2/main.py
+DART Windows classifier,Gesture_System/real-time-HGR-application/.sources/[0c02]-6G-[cm_td_fa].pkl,external,DART runtime,Original FastAI export,Ignored by Git and absent from a fresh clone
+DART Linux classifier,Gesture_System/real-time-HGR-application/.sources/[bf75]-7G-[cm_td_fa]-Linux.pkl,external,DART runtime on non-Windows,Original FastAI export,Ignored by Git and absent from a fresh clone
+CATT-ASD student checkpoint,online_ASD/pretrain_model/SOTA_studen_model/holopi_student_best.pt,tracked,CATT-ASD runtime,Retained in this repository,Selected epoch-42 model
+CATT-ASD teacher checkpoints,online_ASD/pretrain_model/,tracked,CATT-ASD feature extraction and retained development paths,Retained in this repository,Exact training/evaluation program is in the MSSG repository
+S3FD face detector weight,online_ASD/model/faceDetector/s3fd/sfd_face.pth,tracked,CATT-ASD runtime,Retained in this repository,Resolution order is HOLOPI_S3FD_WEIGHTS then the original FYP MSSG path when present then this local copy
+RAG Chroma database,RAG/db/,tracked,live retrieval,Retained in this repository,Database revision is tied to the repository commit
+RAG semantic-router anchors,RAG/teleoracle_v2_anchors.npz,tracked,live retrieval,Retained in this repository,Used by RAG/ProposedRouter.py
+LARA retail questions,experiment_metric/reranker_metric/retail_qna_eval_100.json,tracked,LARA efficiency evaluation,Retained in this repository,No relevance labels; efficiency use only
+MS MARCO evaluation subset,external cache or notebook download,external,LARA effectiveness evaluation,Dataset provider through retained notebook,Verify 5161-query development subset
+ZipVoice distilled model,Hugging Face cache,external,live TTS,k2-fsa/ZipVoice,Current engine forces offline mode and therefore requires a populated cache
+ZipVoice prompt audio,TTS/ZipVoice/short_voice.wav,tracked,live TTS,Retained in this repository,Voice prompt is project-specific
+Allosaurus model,Allosaurus package cache,external,live viseme generation,Installed/downloaded by Allosaurus,Used by TTS/allosaurus/server.py
+Faster-Whisper large-v3 model,faster-whisper cache,external,live STT,Downloaded by faster-whisper,Requires sufficient GPU memory for retained float16 configuration
+React avatar assets,react_avatar/public/models/,external,avatar scene,Original project assets,Ignored by Git and absent from a fresh clone
+React product assets,react_avatar/public/products/,external,product carousel,Original project assets,Ignored by Git and absent from a fresh clone
+React animations and audio,react_avatar/public/animations/ and react_avatar/public/audios/,external,avatar scene,Original project assets,Ignored by Git and absent from a fresh clone
+React Node dependencies,react_avatar/node_modules/,generated,avatar scene,Run npm install inside react_avatar,Required before npm run build or frontend launch
+Custom wake-word model,raspi/camera/hey_holo.onnx,external,Raspberry Pi publisher,Original openWakeWord export,Required unless OWW model configuration is changed
+FFmpeg binary,ffmpeg/bin/ffmpeg.exe,external,legacy TTS and media utilities,Install a compatible Windows FFmpeg build,Not directly launched by the current orchestrator
+Rhubarb binary,rhubarb/rhubarb.exe,external,legacy TTS path,Download Rhubarb Lip Sync 1.14.0,Current ZipVoice path uses Allosaurus instead
+DART manuscript raw trials,not retained,unavailable,manuscript Tables 3-4,No recoverable source,Do not reconstruct from aggregate values
+LR-ASD adapted checkpoint and output,not retained,unavailable,manuscript Tables 5-6,No recoverable source,Rows remain reported-only archival transcriptions

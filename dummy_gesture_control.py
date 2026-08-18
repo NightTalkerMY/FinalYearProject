@@ -1,7 +1,11 @@
+import os
 import requests
 
 # Configuration
-ORCHESTRATOR_URL = "http://127.0.0.1:5000/gesture_command"
+ORCHESTRATOR_URL = os.getenv(
+    "HOLOPI_GESTURE_ORCHESTRATOR_URL",
+    "http://127.0.0.1:5000/gesture_command",
+)
 
 print("=========================================")
 print("     SIMPLE GESTURE TRIGGER       ")

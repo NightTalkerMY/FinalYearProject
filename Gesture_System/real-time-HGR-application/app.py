@@ -1,6 +1,7 @@
 # e2eET Skeleton Based HGR Using Data-Level Fusion
 # Dynamic Hand Gestures Classification: WebRTC Receiver
 # -----------------------------------------------
+import os
 import sys
 import re
 import json
@@ -29,7 +30,7 @@ from hgr_box_gate import BoxGate
 # [CONFIGURATION]____________________________________________________
 # REPLACE THIS WITH YOUR MEDIAMTX SERVER IP
 # Note the endpoint ends in '/whep' for subscribers (WHIP is for publishers)
-SERVER_URL = "http://127.0.0.1:8889/cam1/whep" 
+SERVER_URL = os.getenv("HOLOPI_CAM1_WHEP_URL", "http://127.0.0.1:8889/cam1/whep")
 
 cfg = json.load(open("./allConfigs.jsonc"))
 
